@@ -604,21 +604,21 @@ local options = {
                     end,
                     confirm = "ConfirmReload"
                 },
-                soloLayout = {
-                    name = "Solo Layout",
-                    type = "select",
-                    width = "full",
-                    order = 1,
-                    handler = Layouts,
-                    values = "List",
-                    style = "dropdown",
-                    get = function()
-                        return UI:GetOption("soloLayout")
-                    end,
-                    set = function(info, value)
-                        UI:SetOption("soloLayout", value)
-                    end
-                },
+                -- soloLayout = {
+                --     name = "Solo Layout",
+                --     type = "select",
+                --     width = "full",
+                --     order = 1,
+                --     handler = Layouts,
+                --     values = "List",
+                --     style = "dropdown",
+                --     get = function()
+                --         return UI:GetOption("soloLayout")
+                --     end,
+                --     set = function(info, value)
+                --         UI:SetOption("soloLayout", value)
+                --     end
+                -- },
                 partyLayout = {
                     name = "Party Layout",
                     type = "select",
@@ -828,6 +828,7 @@ local defaults = {
         -- Action Bars Module
         actionBarsModule = true,
         actionBarsHideMacroNames = true,
+        -- actionBar1Condition = "[mounted,advflyable][harm,exists,nodead][help,exists,combat][help,exists,group][combat] show; hide",
         actionBar1Condition = "[harm,exists,nodead][help,exists,combat][help,exists,group][combat] show; hide",
         actionBar2Condition = "[mod:alt] show; hide",
         actionBar3Condition = "hide",
@@ -844,11 +845,11 @@ local defaults = {
 
         -- Pet Bar Module
         petActionBarModule = true,
-        petActionBarCondition = "[mod:ctrl] show; hide",
+        petActionBarCondition = "[mod:ctrl,@pet,exists] show; hide",
 
         -- Stance Bar Module
         stanceBarModule = true,
-        stanceBarCondition = "hide",
+        stanceBarCondition = "[mod:ctrl,stance:1/2/3/4/5/6] show; hide",
 
         -- Status Tracking Bar Module
         statusTrackingBarModule = true,
@@ -874,7 +875,7 @@ local defaults = {
         minimapCondition = "",
 
         -- Layouts Module
-        layoutsModule = false,
+        layoutsModule = true,
         soloLayout = nil,
         partyLayout = nil,
         raidLayout = nil,
@@ -1235,6 +1236,16 @@ function ActionBars:Enable()
     UI:Event("PET_BATTLE_CLOSE", function()
         ActionBars:Unlock()
         ActionBars:Register()
+    end)
+
+    UI:Event("PLAYER_TARGET_CHANGED", function()
+
+        if UnitIsUnit("target", "player") then
+            ActionBars:Show({["actionBar1"] = MainMenuBar})
+        else
+            ActionBars:Register()
+        end
+
     end)
 
     UI:OnLock(function()
@@ -2483,9 +2494,9 @@ function Layouts:Evaluate(event, ...)
         newLayout = self.combatLayout
     end
 
-    if GetBonusBarIndex() == 11 then -- Advanced Flying (Dragonriding)
-        newLayout = 1
-    end
+    -- if GetBonusBarIndex() == 11 then -- Advanced Flying (Dragonriding)
+    --     newLayout = 1
+    -- end
 
     if event == "OnLock" then
         newLayout = self.defaultLayout

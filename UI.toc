@@ -3,6 +3,7 @@
 ## Notes: Custom UI
 ## Version: 1.0.0
 ## Author: Alberto Beloni
+## IconTexture: Interface\AddOns\UI\Media\Icon
 ## SavedVariables: UIDB
 ## OptionalDeps: Ace3
 
