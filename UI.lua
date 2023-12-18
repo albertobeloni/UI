@@ -2394,13 +2394,6 @@ function Layouts:Enable()
         Layouts:Evaluate(event, ...)
     end)
 
-    -- UI:Event("GROUP_JOINED", function(event, ...)
-    --     Layouts:Evaluate(event, ...)
-    -- end)
-    -- UI:Event("GROUP_LEFT", function(event, ...)
-    --     Layouts:Evaluate(event, ...)
-    -- end)
-
     UI:Event("GROUP_ROSTER_UPDATE", function(event, ...)
         Layouts:Evaluate(event, ...)
     end)
