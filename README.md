@@ -13,14 +13,17 @@ World of Warcraft AddOn providing more customization and functionality without c
 ## Example UI
 
 ![Example UI](Media/Examples/Example%20(1).png)
+*Immersive UI while questing and leveling*
 
 ![Example UI](Media/Examples/Example%20(4).png)
+*Show what you need while in combat*
 
 ![Example UI](Media/Examples/Example%20(5).png)
+*Explore the world without unnecessary distractions*
 
 ## Included Layouts
 
-If you want to replicate the examples above, you can import the included UI layouts in ```/Layouts``` using Edit Mode.
+If you want to replicate the examples above, you can import the included UI layouts in ```/Layouts``` using Edit Mode. You can select these layouts (or your own) on the Layouts module configuration to have the correct layout applied automatically when your group updates.
 
 ![Party Layout](Media/Examples/Layout%20(1).png)
 
@@ -41,3 +44,7 @@ You can access the options via the game Options menu (```Options > AddOns > UI``
 ![Unit Frames Options](Media/Examples/Configuration%20(3).png)
 
 ![Layouts Options](Media/Examples/Configuration%20(4).png)
+
+## Issues
+
+Please report any issues or requests on the project [Issue Tracker](https://github.com/albertobeloni/UI/issues)
