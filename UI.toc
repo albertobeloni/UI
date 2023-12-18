@@ -1,6 +1,6 @@
 ## Interface: 100200
 ## Title: UI
-## Notes: Custom UI
+## Notes: Customizable World of Warcraft UI
 ## Version: 1.0.0
 ## Author: Alberto Beloni
 ## IconTexture: Interface\AddOns\UI\Media\Icon
