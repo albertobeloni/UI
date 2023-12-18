@@ -604,23 +604,23 @@ local options = {
                     end,
                     confirm = "ConfirmReload"
                 },
-                -- soloLayout = {
-                --     name = "Solo Layout",
-                --     type = "select",
-                --     width = "full",
-                --     order = 1,
-                --     handler = Layouts,
-                --     values = "List",
-                --     style = "dropdown",
-                --     get = function()
-                --         return UI:GetOption("soloLayout")
-                --     end,
-                --     set = function(info, value)
-                --         UI:SetOption("soloLayout", value)
-                --     end
-                -- },
-                partyLayout = {
+                group5Layout = {
                     name = "Party Layout",
+                    type = "select",
+                    width = "full",
+                    order = 1,
+                    handler = Layouts,
+                    values = "List",
+                    style = "dropdown",
+                    get = function()
+                        return UI:GetOption("group5Layout")
+                    end,
+                    set = function(info, value)
+                        UI:SetOption("group5Layout", value)
+                    end
+                },
+                group10Layout = {
+                    name = "Raid Layout (10)",
                     type = "select",
                     width = "full",
                     order = 2,
@@ -628,14 +628,14 @@ local options = {
                     values = "List",
                     style = "dropdown",
                     get = function()
-                        return UI:GetOption("partyLayout")
+                        return UI:GetOption("group10Layout")
                     end,
                     set = function(info, value)
-                        UI:SetOption("partyLayout", value)
+                        UI:SetOption("group10Layout", value)
                     end
                 },
-                raidLayout = {
-                    name = "Raid Layout",
+                group25Layout = {
+                    name = "Raid Layout (25)",
                     type = "select",
                     width = "full",
                     order = 3,
@@ -643,10 +643,25 @@ local options = {
                     values = "List",
                     style = "dropdown",
                     get = function()
-                        return UI:GetOption("raidLayout")
+                        return UI:GetOption("group25Layout")
                     end,
                     set = function(info, value)
-                        UI:SetOption("raidLayout", value)
+                        UI:SetOption("group25Layout", value)
+                    end
+                },
+                group40Layout = {
+                    name = "Raid Layout (40)",
+                    type = "select",
+                    width = "full",
+                    order = 4,
+                    handler = Layouts,
+                    values = "List",
+                    style = "dropdown",
+                    get = function()
+                        return UI:GetOption("group40Layout")
+                    end,
+                    set = function(info, value)
+                        UI:SetOption("group40Layout", value)
                     end
                 }
             }
@@ -876,9 +891,10 @@ local defaults = {
 
         -- Layouts Module
         layoutsModule = true,
-        soloLayout = nil,
-        partyLayout = nil,
-        raidLayout = nil,
+        group5Layout = nil,
+        group10Layout = nil,
+        group25Layout = nil,
+        group40Layout = nil,
 
         -- Bags Module
         bagsModule = true,
@@ -1655,7 +1671,7 @@ function Paging:Evaluate(event, ...)
         return self:Page(self.combatPage)
     end
 
-    if GetBonusBarIndex() == 11 then -- Advanced Flying (Dragonriding)
+    if GetBonusBarIndex() == 11 then -- Dynamic Flying (Dragonriding)
         return self:Page(1)
     end
 
@@ -2378,27 +2394,16 @@ function Layouts:Enable()
         Layouts:Evaluate(event, ...)
     end)
 
-    UI:Event("PLAYER_REGEN_DISABLED", function(event, ...)
-        Layouts:Evaluate(event, ...)
-    end)
-    UI:Event("PLAYER_REGEN_ENABLED", function(event, ...)
-        Layouts:Evaluate(event, ...)
-    end)
-
-    UI:Event("GROUP_JOINED", function(event, ...)
-        Layouts:Evaluate(event, ...)
-    end)
-    UI:Event("GROUP_LEFT", function(event, ...)
-        Layouts:Evaluate(event, ...)
-    end)
-
-    -- UI:Event("PLAYER_TARGET_CHANGED", function(event, ...)
+    -- UI:Event("GROUP_JOINED", function(event, ...)
+    --     Layouts:Evaluate(event, ...)
+    -- end)
+    -- UI:Event("GROUP_LEFT", function(event, ...)
     --     Layouts:Evaluate(event, ...)
     -- end)
 
-    -- UI:Event("EDIT_MODE_LAYOUTS_UPDATED", function()
-    --     Layouts:Update()
-    -- end)
+    UI:Event("GROUP_ROSTER_UPDATE", function(event, ...)
+        Layouts:Evaluate(event, ...)
+    end)
 
     UI:OnLock(function()
         Layouts:Evaluate("OnLock")
@@ -2417,9 +2422,10 @@ function Layouts:Update()
         self.defaultLayout = self.activeLayout
     end
 
-    self.soloLayout = UI:GetOption("soloLayout")
-    self.partyLayout = UI:GetOption("partyLayout")
-    self.raidLayout = UI:GetOption("raidLayout")
+    self.group5Layout = UI:GetOption("group5Layout")
+    self.group10Layout = UI:GetOption("group10Layout")
+    self.group25Layout = UI:GetOption("group25Layout")
+    self.group40Layout = UI:GetOption("group40Layout")
 end
 
 function Layouts:Activate(layout)
@@ -2447,9 +2453,8 @@ function Layouts:GetActive()
 end
 
 function Layouts:Has(layout)
-    local layouts = self:Get()
 
-    if layouts.layouts[layout] then
+    if self.layouts.layouts[layout] then
         return true
     end
 
@@ -2470,33 +2475,20 @@ end
 function Layouts:Evaluate(event, ...)
     local newLayout = self.defaultLayout
 
-    if IsInGroup() and IsInRaid() and self.raidLayout then
-        self.combatLayout = self.raidLayout
-        newLayout = self.raidLayout
-    elseif IsInGroup() and self.partyLayout then
-        self.combatLayout = self.partyLayout
-        newLayout = self.partyLayout
-    elseif self.soloLayout then
-        self.combatLayout = self.soloLayout
-    else
-        self.combatLayout = self.defaultLayout
+    if IsInGroup() or IsInRaid() then
+        local members = GetNumGroupMembers()
+
+        if members <= 5 and self.group5Layout and self:Has(self.group5Layout) then
+            newLayout = self.group5Layout
+        elseif members <= 10 and self.group10Layout and self:Has(self.group10Layout) then
+            newLayout = self.group10Layout
+        elseif members <= 25 and self.group25Layout and self:Has(self.group25Layout) then
+            newLayout = self.group25Layout
+        elseif members <= 40 and self.group40Layout and self:Has(self.group40Layout) then
+            newLayout = self.group40Layout
+        end
+
     end
-
-    -- if UnitCanAttack("player", "target") and not UnitIsDead("target") then
-    --     newLayout = self.combatLayout
-    -- end
-
-    -- if UnitCanAssist("player", "target") and UnitIsPlayer("target") then
-    --     newLayout = self.combatLayout
-    -- end
-
-    if event == "PLAYER_REGEN_DISABLED" or InCombatLockdown() or UnitAffectingCombat("player") then
-        newLayout = self.combatLayout
-    end
-
-    -- if GetBonusBarIndex() == 11 then -- Advanced Flying (Dragonriding)
-    --     newLayout = 1
-    -- end
 
     if event == "OnLock" then
         newLayout = self.defaultLayout
