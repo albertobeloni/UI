@@ -864,7 +864,7 @@ local defaults = {
 
         -- Stance Bar Module
         stanceBarModule = true,
-        stanceBarCondition = "[mod:ctrl,stance:1/2/3/4/5/6] show; hide",
+        stanceBarCondition = "[mod:ctrl] show; hide",
 
         -- Status Tracking Bar Module
         statusTrackingBarModule = true,
@@ -2008,6 +2008,10 @@ function PlayerFrame:Enable()
             PlayerFrame:Evaluate(event, unit)
         end
 
+    end)
+
+    UI:SecureHookScript(self.Frame, "OnShow", function(self)
+        AlternatePowerBar:Show()
     end)
 
     UI:OnLock(function()
