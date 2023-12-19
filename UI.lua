@@ -1935,11 +1935,11 @@ end
 function StatusTrackingBar:Enable()
     self.Frame = CreateFrame("Frame", "StatusTrackingBarContainer", UIParent)
 
+    StatusTrackingBarManager:SetParent(self.Frame)
+
     self.Frame:SetPoint("BOTTOMLEFT", "StatusTrackingBarManager", "BOTTOMLEFT", 0, 0)
     self.Frame:SetPoint("TOPRIGHT", "StatusTrackingBarManager", "TOPRIGHT", 0, 0)
     self.Frame:SetFrameStrata("LOW")
-
-    StatusTrackingBarManager:SetParent(self.Frame)
 
     UI:Event("PLAYER_ENTERING_WORLD", function()
         StatusTrackingBar:Hide()
