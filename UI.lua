@@ -1257,8 +1257,11 @@ function ActionBars:Enable()
     UI:Event("PLAYER_TARGET_CHANGED", function()
 
         if UnitIsUnit("target", "player") then
-            ActionBars:Show({["actionBar1"] = MainMenuBar})
+            -- ActionBars:Show({["actionBar1"] = MainMenuBar})
+            ActionBars:Show()
+            ActionBars:Lock()
         else
+            ActionBars:Unlock()
             ActionBars:Register()
         end
 
