@@ -2010,10 +2010,6 @@ function PlayerFrame:Enable()
 
     end)
 
-    UI:SecureHookScript(self.Frame, "OnShow", function(self)
-        AlternatePowerBar:Show()
-    end)
-
     UI:OnLock(function()
         PlayerFrame:Show()
     end)
@@ -2066,16 +2062,23 @@ end
 
 function PlayerFrame:Evaluate(event, ...)
 
+    if event == "PLAYER_REGEN_DISABLED" then
+        AlternatePowerBar:Show()
+    end
+
     if UnitIsUnit("target", "player") or (UnitIsUnit("target", "pet") and UnitExists("pet")) then
-        return self:Show()
+        self:Show()
+        return
     end
 
     if UnitHealth("player") ~= UnitHealthMax("player") then
         self:Show()
-        return self:Lock()
+        self:Lock()
+        return
     elseif UnitIsDead("player") then
         self:Hide()
-        return self:Lock()
+        self:Lock()
+        return
     end
 
     self:Unlock()
