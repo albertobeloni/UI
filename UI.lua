@@ -2063,27 +2063,31 @@ function PlayerFrame:Unlock()
 end
 
 function PlayerFrame:Evaluate(event, ...)
-
-    if event == "PLAYER_REGEN_DISABLED" then
-        AlternatePowerBar:Show()
-    end
+    UI:Show(AlternatePowerBar)
 
     if UnitIsUnit("target", "player") or (UnitIsUnit("target", "pet") and UnitExists("pet")) then
         self:Show()
         return
     end
 
-    if UnitHealth("player") ~= UnitHealthMax("player") then
-        self:Show()
-        self:Lock()
-        return
-    elseif UnitIsDead("player") then
-        self:Hide()
-        self:Lock()
-        return
+    if event == "UNIT_HEALTH" and not InCombatLockdown() then
+
+        if UnitHealth("player") ~= UnitHealthMax("player") then
+            self:Show()
+            self:Lock()
+            return
+        elseif UnitIsDead("player") then
+            self:Hide()
+            self:Lock()
+            return
+        else
+            self:Unlock()
+            self:Register()
+            return
+        end
+
     end
 
-    self:Unlock()
     self:Register()
 end
 
