@@ -2063,7 +2063,7 @@ function PlayerFrame:Unlock()
 end
 
 function PlayerFrame:Evaluate(event, ...)
-    UI:Show(AlternatePowerBar)
+    UI:Register(AlternatePowerBar, "visibility", "show")
 
     if UnitIsUnit("target", "player") or (UnitIsUnit("target", "pet") and UnitExists("pet")) then
         self:Show()
