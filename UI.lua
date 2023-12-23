@@ -843,9 +843,9 @@ local defaults = {
         -- Action Bars Module
         actionBarsModule = true,
         actionBarsHideMacroNames = true,
-        -- actionBar1Condition = "[mounted,advflyable][harm,exists,nodead][help,exists,combat][help,exists,group][combat] show; hide",
-        actionBar1Condition = "[harm,exists,nodead][help,exists,combat][help,exists,group][combat] show; hide",
-        actionBar2Condition = "[mod:alt] show; hide",
+        -- actionBar1Condition = "[vehicleui] hide; [mounted,advflyable][harm,exists,nodead][help,exists,combat][help,exists,group][combat] show; hide",
+        actionBar1Condition = "[vehicleui] hide; [harm,exists,nodead][help,exists,combat][help,exists,group][combat] show; hide",
+        actionBar2Condition = "[vehicleui] hide; [mod:alt] show; hide",
         actionBar3Condition = "hide",
         actionBar4Condition = "",
         actionBar5Condition = "",
