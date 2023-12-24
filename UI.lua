@@ -26,6 +26,7 @@ local Menu = UI:NewModule("Menu")
 local BuffFrame = UI:NewModule("BuffFrame")
 local DebuffFrame = UI:NewModule("DebuffFrame")
 local Tooltips = UI:NewModule("Tooltips")
+local DamageMeter = UI:NewModule("DamageMeter")
 
 --------------------------------------------------------------------------------
 -- UI
@@ -825,6 +826,27 @@ local options = {
                     end
                 }
             }
+        },
+        damageMeter = {
+            name = "Damage Meter",
+            type = "group",
+            order = 11,
+            args = {
+                damageMeterModule = {
+                    name = "Enable Damage Meter Module",
+                    type = "toggle",
+                    width = "full",
+                    order = 0,
+                    get = function()
+                        return UI:GetOption("damageMeterModule")
+                    end,
+                    set = function(info, value)
+                        UI:SetOption("damageMeterModule", value)
+                        ReloadUI()
+                    end,
+                    confirm = "ConfirmReload"
+                }
+            }
         }
     }
 }
@@ -914,6 +936,10 @@ local defaults = {
         tooltipsModule = true,
         tooltipsUnitInCombat = true,
         tooltipsActionInCombat = true,
+
+        -- Damage Meter Module
+        damageMeterModule = true,
+        damageMeterShown = true,
 
     }
 }
@@ -1006,6 +1032,10 @@ function UI:OnEnable()
 
     if self:GetOption("tooltipsModule") then
         Tooltips:Enable()
+    end
+
+    if self:GetOption("damageMeterModule") then
+        DamageMeter:Enable()
     end
 
     for event in pairs(self.events) do
@@ -2816,4 +2846,235 @@ end
 
 function Tooltips:Hide()
     self.Frame:Hide()
+end
+
+--------------------------------------------------------------------------------
+-- Damage Meter
+--------------------------------------------------------------------------------
+
+function DamageMeter:Enable()
+    self.Frame = CreateFrame("GameTooltip", "DamageMeter", UIParent, "SharedTooltipTemplate")
+
+    self.Frame:SetOwner(UIParent, "ANCHOR_NONE")
+    self.Frame:SetPoint("BOTTOMRIGHT", "UIParent", "BOTTOMRIGHT", -10, 10)
+    self.Frame:EnableMouse(true)
+    self.Frame:SetMovable(true)
+    self.Frame:SetFrameStrata("LOW")
+
+    self.Frame:SetScript("OnMouseDown", function(self, button)
+
+        if button == "LeftButton" and not self.isMoving then
+            self:StartMoving()
+            self.isMoving = true
+        end
+
+    end)
+    self.Frame:SetScript("OnMouseUp", function(self, button)
+
+        if button == "LeftButton" and self.isMoving then
+            self:StopMovingOrSizing()
+            self.isMoving = false
+            -- self:SetUserPlaced(true)
+        end
+
+    end)
+
+    UI:Event("COMBAT_LOG_EVENT_UNFILTERED", DamageMeter.Parser)
+
+    UI:Event("PLAYER_ENTERING_WORLD", function()
+        DamageMeter:Update()
+
+        if not DamageMeter:IsShown() then
+            DamageMeter:Hide()
+        end
+
+    end)
+
+    UI:RegisterChatCommand("meter", DamageMeter.Toggle)
+end
+
+function DamageMeter:Start()
+
+    if not self.started then
+        self:Reset()
+
+        self.started = time()
+    end
+
+    if self.timer then
+        self.timer:Cancel()
+        self.timer = nil
+    end
+
+    self.timer = C_Timer.NewTimer(2, function(self)
+
+        if DamageMeter.started and not InCombatLockdown() then
+            DamageMeter:Stop()
+        end
+
+    end)
+end
+
+function DamageMeter:Stop()
+
+    if self.started then
+        self.started = nil
+    end
+
+end
+
+function DamageMeter:Reset()
+
+    if not IsInInstance() then
+        self.damageTotal = 0
+        self.healingTotal = 0
+    end
+
+    self.damage = 0
+    self.healing = 0
+end
+
+function DamageMeter:Heal(amount)
+    self.healing = self.healing + amount
+    self.healingTotal = self.healingTotal + amount
+    self:Update()
+end
+
+function DamageMeter:Damage(amount)
+    self.damage = self.damage + amount
+    self.damageTotal = self.damageTotal + amount
+    self:Update()
+end
+
+function DamageMeter:Update()
+    local elapsed = math.max(time() - (self.started or time()), 1)
+
+    _G[self.Frame:GetName() .. "TextLeft1"]:SetFontObject(GameTooltipText)
+    _G[self.Frame:GetName() .. "TextRight1"]:SetFontObject(GameTooltipText)
+
+    local damage
+    local damageTotal
+
+    damage = self.damage or 0
+    damageTotal = self.damageTotal or 0
+
+    local healing
+    local healingTotal
+
+    healing = self.healing or 0
+    healingTotal = self.healingTotal or 0
+
+    self.Frame:ClearLines()
+
+    damage = string.format("%s (%s)", self.Format(damageTotal), self.Format(damage / elapsed))
+    healing = string.format("%s (%s)", self.Format(healingTotal), self.Format(healing / elapsed))
+
+    self.Frame:AddDoubleLine("Damage", damage, nil, nil, nil, 1, 1, 1)
+    self.Frame:AddDoubleLine("Healing", healing, nil, nil, nil, 1, 1, 1)
+
+    self.Frame:Show()
+
+    if not self:IsShown() then
+        self:Hide()
+    end
+
+end
+
+function DamageMeter:Show()
+    UI:FadeIn(self.Frame)
+    UI:SetOption("damageMeterShown", true)
+end
+
+function DamageMeter:Hide()
+    UI:FadeOut(self.Frame)
+    UI:SetOption("damageMeterShown", false)
+end
+
+function DamageMeter:IsShown()
+    return UI:GetOption("damageMeterShown")
+end
+
+function DamageMeter.Toggle()
+
+    if DamageMeter:IsShown() then
+        DamageMeter:Hide()
+    else
+        DamageMeter:Show()
+    end
+
+end
+
+function DamageMeter.Format(amount)
+
+    if amount > 999999999 then
+        return ("%02.3fB"):format(amount / 1000000000)
+    end
+
+    if amount > 999999 then
+        return ("%02.2fM"):format(amount / 1000000)
+    end
+
+    if amount > 9999 then
+        return ("%02.1fK"):format(amount / 1000)
+    end
+
+    return math.floor(amount)
+end
+
+function DamageMeter.Parser()
+    local
+    timestamp,
+    token,
+    hidding,
+    sourceGUID,
+    sourceName,
+    sourceFlag,
+    sourceFlag2,
+    targetGUID,
+    targetName,
+    targetFlag,
+    targetFlag2,
+    arg1,
+    arg2,
+    arg3,
+    arg4,
+    arg5,
+    arg6,
+    arg7,
+    arg8,
+    arg9,
+    arg10,
+    arg11 = CombatLogGetCurrentEventInfo()
+
+    if sourceGUID == UnitGUID("player") or sourceGUID == UnitGUID("pet") then
+        DamageMeter:Start()
+
+        if token == "SPELL_HEAL" or token == "SPELL_PERIODIC_HEAL" then
+            DamageMeter:Heal(arg4 - arg5 + arg6)
+        elseif token == "SWING_DAMAGE" then
+            DamageMeter:Damage(arg1 + (arg6 or 0))
+        elseif token == "SWING_MISSED" and arg1 == "ABSORB" then
+            DamageMeter:Damage(arg3)
+        elseif
+        token == "SPELL_DAMAGE" or
+        token == "SPELL_PERIODIC_DAMAGE" or
+        token == "SPELL_BUILDING_DAMAGE" or
+        token == "RANGE_DAMAGE" or
+        token == "SPELL_EXTRA_ATTACKS" or
+        token == "DAMAGE_SHIELD" or
+        token == "DAMAGE_SPLIT" then
+            DamageMeter:Damage(arg4 + (arg9 or 0))
+        elseif
+        arg4 == "ABSORB" and (
+            token == "SPELL_MISSED" or
+            token == "RANGE_MISSED" or
+            token == "SPELL_PERIODIC_MISSED" or
+            token == "SPELL_BUILDING_MISSED" or
+            token == "DAMAGE_SHIELD_MISSED"
+        ) then
+            DamageMeter:Damage(arg6)
+        end
+
+    end
+
 end
