@@ -2882,10 +2882,9 @@ function DamageMeter:Enable()
     UI:Event("COMBAT_LOG_EVENT_UNFILTERED", DamageMeter.Parser)
 
     UI:Event("PLAYER_ENTERING_WORLD", function()
-        DamageMeter:Update()
 
-        if not DamageMeter:IsShown() then
-            DamageMeter:Hide()
+        if DamageMeter:IsShown() then
+            DamageMeter:Update()
         end
 
     end)
@@ -2981,13 +2980,14 @@ function DamageMeter:Update()
 end
 
 function DamageMeter:Show()
-    UI:FadeIn(self.Frame)
     UI:SetOption("damageMeterShown", true)
+    self.Frame:Show()
+    UI:FadeIn(self.Frame)
 end
 
 function DamageMeter:Hide()
-    UI:FadeOut(self.Frame)
     UI:SetOption("damageMeterShown", false)
+    UI:FadeOut(self.Frame)
 end
 
 function DamageMeter:IsShown()
