@@ -2847,13 +2847,12 @@ end
 --------------------------------------------------------------------------------
 
 function DamageMeter:Enable()
+    UI:Print("C")
     self.Frame = CreateFrame("GameTooltip", "DamageMeter", UIParent, "SharedTooltipTemplate")
-
-    self.Frame:SetOwner(UIParent, "ANCHOR_NONE")
-    self.Frame:SetPoint("BOTTOMRIGHT", "UIParent", "BOTTOMRIGHT", -10, 10)
     self.Frame:EnableMouse(true)
     self.Frame:SetMovable(true)
-    self.Frame:SetFrameStrata("LOW")
+
+    self:Position()
 
     self.Frame:SetScript("OnMouseDown", function(self, button)
 
@@ -2876,11 +2875,13 @@ function DamageMeter:Enable()
     UI:Event("COMBAT_LOG_EVENT_UNFILTERED", DamageMeter.Parser)
 
     UI:Event("PLAYER_ENTERING_WORLD", function()
+        DamageMeter:Position()
+        DamageMeter:Update()
+    end)
 
-        if DamageMeter:IsShown() then
-            DamageMeter:Update()
-        end
-
+    UI:Event("CINEMATIC_STOP", function()
+        DamageMeter:Position()
+        DamageMeter:Update()
     end)
 
     UI:RegisterChatCommand("meter", DamageMeter.Toggle)
@@ -2973,9 +2974,15 @@ function DamageMeter:Update()
 
 end
 
+function DamageMeter:Position()
+    self.Frame:SetOwner(UIParent, "ANCHOR_NONE")
+    self.Frame:SetPoint("BOTTOMRIGHT", "UIParent", "BOTTOMRIGHT", -10, 10)
+    self.Frame:SetFrameStrata("LOW")
+end
+
 function DamageMeter:Show()
     UI:SetOption("damageMeterShown", true)
-    self.Frame:Show()
+    self:Update()
     UI:FadeIn(self.Frame)
 end
 
