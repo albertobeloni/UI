@@ -893,7 +893,7 @@ local defaults = {
 
         -- Player Frame Module
         playerFrameModule = true,
-        playerFrameCondition = "[harm,exists,nodead][help,exists,group][combat] show; hide",
+        playerFrameCondition = "[@player,dead] hide; [harm,exists,nodead][help,exists,group][combat] show; hide",
 
         -- Focus Frame Module
         focusFrameModule = true,
@@ -2104,14 +2104,8 @@ function PlayerFrame:Evaluate(event, ...)
 
         if UnitHealth("player") ~= UnitHealthMax("player") then
             self:Show()
-            self:Lock()
-            return
-        elseif UnitIsDead("player") then
-            self:Hide()
-            self:Lock()
             return
         else
-            self:Unlock()
             self:Register()
             return
         end
