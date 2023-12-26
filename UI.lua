@@ -939,7 +939,8 @@ local defaults = {
 
         -- Damage Meter Module
         damageMeterModule = true,
-        damageMeterShown = true,
+        damageMeter = true,
+        damageMeterInfo = true,
 
     }
 }
@@ -2851,24 +2852,9 @@ function DamageMeter:Enable()
     self.Frame:SetOwner(UIParent, "ANCHOR_NONE")
     self.Frame:SetPoint("BOTTOMRIGHT", "UIParent", "BOTTOMRIGHT", -10, 10)
     self.Frame:SetFrameStrata("LOW")
-    -- self.Frame:EnableMouse(true)
-    -- self.Frame:RegisterForDrag("LeftButton")
-    -- self.Frame:SetMovable(true)
-
-    self.InfoFrame = CreateFrame("GameTooltip", "DamageMeterInfo", UIParent, "SharedTooltipTemplate")
-    self.InfoFrame.visible = false
 
     _G[self.Frame:GetName() .. "TextLeft1"]:SetFontObject(GameTooltipText)
     _G[self.Frame:GetName() .. "TextRight1"]:SetFontObject(GameTooltipText)
-    _G[self.InfoFrame:GetName() .. "TextLeft1"]:SetFontObject(GameTooltipText)
-    _G[self.InfoFrame:GetName() .. "TextRight1"]:SetFontObject(GameTooltipText)
-
-    -- self.Frame:SetScript("OnDragStart", function(self, button)
-    --     self:StartMoving()
-    -- end)
-    -- self.Frame:SetScript("OnDragStop", function(self)
-    --     self:StopMovingOrSizing()
-    -- end)
 
     self.Frame:SetScript("OnMouseUp", function(self, button)
 
@@ -2890,9 +2876,18 @@ function DamageMeter:Enable()
 
     self.damage = {}
     self.healing = {}
+
+    UI:RegisterChatCommand("/damage", function()
+        DamageMeter:Toggle()
+    end)
 end
 
 function DamageMeter:Damage(source, action, amount)
+
+    if amount == 0 then
+        return
+    end
+
     self.damage[source] = self.damage[source] or {}
 
     self.damage[source].total = self.damage[source].total or 0
@@ -2903,10 +2898,14 @@ function DamageMeter:Damage(source, action, amount)
     self.damage[source].actions[action] = self.damage[source].actions[action] + amount
 
     self:Update()
-    self:Info()
 end
 
 function DamageMeter:Healing(source, action, amount)
+
+    if amount == 0 then
+        return
+    end
+
     self.healing[source] = self.healing[source] or {}
 
     self.healing[source].total = self.healing[source].total or 0
@@ -2917,7 +2916,6 @@ function DamageMeter:Healing(source, action, amount)
     self.healing[source].actions[action] = self.healing[source].actions[action] + amount
 
     self:Update()
-    self:Info()
 end
 
 function DamageMeter:Start()
@@ -2969,6 +2967,11 @@ function DamageMeter:Reset()
 end
 
 function DamageMeter:Update()
+
+    if not UI:GetOption("damageMeter") then
+        return
+    end
+
     self.Frame:SetOwner(UIParent, "ANCHOR_NONE")
     self.Frame:ClearLines()
 
@@ -2978,8 +2981,6 @@ function DamageMeter:Update()
 
     local damage = 0
     local damageTotal = 0
-
-    self.InfoFrame:AddLine("Damage")
 
     for source, data in pairs(self.damage) do
         damageTotal = damageTotal + data.total
@@ -2992,12 +2993,39 @@ function DamageMeter:Update()
 
     self.Frame:AddDoubleLine("Damage", string.format("%s (%s)", self.Format(damageTotal), self.Format(damage / elapsed)), nil, nil, nil, 1, 1, 1)
 
+    if UI:GetOption("damageMeterInfo") and next(self.damage) then
+
+        for source, data in pairs(self.damage) do
+            local sorted = {}
+
+            damageTotal = 0
+
+            for action, amount in pairs(data.actions) do
+                table.insert(sorted, action)
+                damageTotal = damageTotal + amount
+            end
+
+            self.Frame:AddDoubleLine(source, self.Format(damageTotal), nil, nil, nil, 1, 1, 1)
+
+            table.sort(sorted, function(a, b)
+                return data.actions[a] > data.actions[b]
+            end)
+
+            for i = 1, #sorted do
+                local action = sorted[i]
+                local amount = data.actions[sorted[i]]
+
+                self.Frame:AddDoubleLine(i .. ". " .. action, self.Format(amount), 1, 1, 1, 1, 1, 1)
+            end
+
+        end
+
+    end
+
     -- Healing
 
     local healing = 0
     local healingTotal = 0
-
-    self.InfoFrame:AddLine("Healing")
 
     for source, data in pairs(self.healing) do
         healingTotal = healingTotal + data.total
@@ -3010,49 +3038,7 @@ function DamageMeter:Update()
 
     self.Frame:AddDoubleLine("Healing", string.format("%s (%s)", self.Format(healingTotal), self.Format(healing / elapsed)), nil, nil, nil, 1, 1, 1)
 
-    self.Frame:Show()
-end
-
-function DamageMeter:Info()
-
-    if not self.InfoFrame.visible or (next(self.damage) == nil and next(self.healing) == nil) then
-        return
-    end
-
-    self.InfoFrame:SetOwner(self.Frame, "ANCHOR_TOPRIGHT")
-    self.InfoFrame:ClearLines()
-
-    -- Damage
-
-    if next(self.damage) then
-        self.InfoFrame:AddLine("Damage")
-
-        for source, data in pairs(self.damage) do
-            local sorted = {}
-
-            for action, amount in pairs(data.actions) do
-                table.insert(sorted, action)
-            end
-
-            table.sort(sorted, function(a, b)
-                return data.actions[a] > data.actions[b]
-            end)
-
-            for i = 1, #sorted do
-                local action = sorted[i]
-                local amount = data.actions[sorted[i]]
-
-                self.InfoFrame:AddDoubleLine(action, self.Format(amount), 1, 1, 1, 1, 1, 1)
-            end
-
-        end
-
-    end
-
-    -- Healing
-
-    if next(self.healing) then
-        self.InfoFrame:AddLine("Healing")
+    if UI:GetOption("damageMeterInfo") and next(self.damage) then
 
         for source, data in pairs(self.healing) do
             local sorted = {}
@@ -3069,26 +3055,37 @@ function DamageMeter:Info()
                 local action = sorted[i]
                 local amount = data.actions[sorted[i]]
 
-                self.InfoFrame:AddDoubleLine(action, self.Format(amount), 1, 1, 1, 1, 1, 1)
+                self.Frame:AddDoubleLine(i .. ". " .. action, self.Format(amount), 1, 1, 1, 1, 1, 1)
             end
 
         end
 
     end
 
-    self.InfoFrame:Show()
+    self.Frame:Show()
+end
+
+function DamageMeter:Toggle()
+
+    if UI:GetOption("damageMeter") then
+        self.Frame:Hide()
+        UI:SetOption("damageMeter", false)
+    else
+        self:Update()
+        UI:SetOption("damageMeter", true)
+    end
+
 end
 
 function DamageMeter:ToggleInfo()
 
-    if self.InfoFrame.visible then
-        self.InfoFrame.visible = false
-        self.InfoFrame:Hide()
+    if UI:GetOption("damageMeterInfo") then
+        UI:SetOption("damageMeterInfo", false)
     else
-        self.InfoFrame.visible = true
-        self:Info()
+        UI:SetOption("damageMeterInfo", true)
     end
 
+    self:Update()
 end
 
 function DamageMeter.Format(amount)
