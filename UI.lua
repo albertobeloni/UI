@@ -3005,6 +3005,7 @@ function DamageMeter:Update()
                 damageTotal = damageTotal + amount
             end
 
+            self.Frame:AddLine(" ")
             self.Frame:AddDoubleLine(source, self.Format(damageTotal), nil, nil, nil, 1, 1, 1)
 
             table.sort(sorted, function(a, b)
@@ -3015,11 +3016,15 @@ function DamageMeter:Update()
                 local action = sorted[i]
                 local amount = data.actions[sorted[i]]
 
-                self.Frame:AddDoubleLine(i .. ". " .. action, self.Format(amount), 1, 1, 1, 1, 1, 1)
+                self.Frame:AddDoubleLine(action, self.Format(amount), 1, 1, 1, 1, 1, 1)
             end
 
         end
 
+    end
+
+    if UI:GetOption("damageMeterInfo") and next(self.damage) then
+        self.Frame:AddLine(" ")
     end
 
     -- Healing
@@ -3038,14 +3043,20 @@ function DamageMeter:Update()
 
     self.Frame:AddDoubleLine("Healing", string.format("%s (%s)", self.Format(healingTotal), self.Format(healing / elapsed)), nil, nil, nil, 1, 1, 1)
 
-    if UI:GetOption("damageMeterInfo") and next(self.damage) then
+    if UI:GetOption("damageMeterInfo") and next(self.healing) then
 
         for source, data in pairs(self.healing) do
             local sorted = {}
 
+            healingTotal = 0
+
             for action, amount in pairs(data.actions) do
                 table.insert(sorted, action)
+                healingTotal = healingTotal + amount
             end
+
+            self.Frame:AddLine(" ")
+            self.Frame:AddDoubleLine(source, self.Format(healingTotal), nil, nil, nil, 1, 1, 1)
 
             table.sort(sorted, function(a, b)
                 return data.actions[a] > data.actions[b]
@@ -3055,7 +3066,7 @@ function DamageMeter:Update()
                 local action = sorted[i]
                 local amount = data.actions[sorted[i]]
 
-                self.Frame:AddDoubleLine(i .. ". " .. action, self.Format(amount), 1, 1, 1, 1, 1, 1)
+                self.Frame:AddDoubleLine(action, self.Format(amount), 1, 1, 1, 1, 1, 1)
             end
 
         end
