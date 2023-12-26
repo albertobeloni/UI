@@ -2877,7 +2877,7 @@ function DamageMeter:Enable()
     self.damage = {}
     self.healing = {}
 
-    UI:RegisterChatCommand("/damage", function()
+    UI:RegisterChatCommand("damage", function()
         DamageMeter:Toggle()
     end)
 end
@@ -3071,8 +3071,8 @@ function DamageMeter:Toggle()
         self.Frame:Hide()
         UI:SetOption("damageMeter", false)
     else
-        self:Update()
         UI:SetOption("damageMeter", true)
+        self:Update()
     end
 
 end
