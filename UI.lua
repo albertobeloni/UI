@@ -2847,51 +2847,83 @@ end
 --------------------------------------------------------------------------------
 
 function DamageMeter:Enable()
-    UI:Print("C")
     self.Frame = CreateFrame("GameTooltip", "DamageMeter", UIParent, "SharedTooltipTemplate")
-    self.Frame:EnableMouse(true)
-    self.Frame:SetMovable(true)
+    self.Frame:SetOwner(UIParent, "ANCHOR_NONE")
+    self.Frame:SetPoint("BOTTOMRIGHT", "UIParent", "BOTTOMRIGHT", -10, 10)
+    self.Frame:SetFrameStrata("LOW")
+    -- self.Frame:EnableMouse(true)
+    -- self.Frame:RegisterForDrag("LeftButton")
+    -- self.Frame:SetMovable(true)
 
-    self:Position()
+    self.InfoFrame = CreateFrame("GameTooltip", "DamageMeterInfo", UIParent, "SharedTooltipTemplate")
+    self.InfoFrame.visible = false
 
-    self.Frame:SetScript("OnMouseDown", function(self, button)
+    _G[self.Frame:GetName() .. "TextLeft1"]:SetFontObject(GameTooltipText)
+    _G[self.Frame:GetName() .. "TextRight1"]:SetFontObject(GameTooltipText)
+    _G[self.InfoFrame:GetName() .. "TextLeft1"]:SetFontObject(GameTooltipText)
+    _G[self.InfoFrame:GetName() .. "TextRight1"]:SetFontObject(GameTooltipText)
 
-        if button == "LeftButton" and not self.isMoving then
-            self:StartMoving()
-            self.isMoving = true
-        end
+    -- self.Frame:SetScript("OnDragStart", function(self, button)
+    --     self:StartMoving()
+    -- end)
+    -- self.Frame:SetScript("OnDragStop", function(self)
+    --     self:StopMovingOrSizing()
+    -- end)
 
-    end)
     self.Frame:SetScript("OnMouseUp", function(self, button)
 
-        if button == "LeftButton" and self.isMoving then
-            self:StopMovingOrSizing()
-            self.isMoving = false
-            -- self:SetUserPlaced(true)
+        if button == "LeftButton" then
+            DamageMeter:ToggleInfo()
         end
 
     end)
 
-    UI:Event("COMBAT_LOG_EVENT_UNFILTERED", DamageMeter.Parser)
-
     UI:Event("PLAYER_ENTERING_WORLD", function()
-        DamageMeter:Position()
         DamageMeter:Update()
     end)
 
     UI:Event("CINEMATIC_STOP", function()
-        DamageMeter:Position()
         DamageMeter:Update()
     end)
 
-    UI:RegisterChatCommand("meter", DamageMeter.Toggle)
+    UI:Event("COMBAT_LOG_EVENT_UNFILTERED", DamageMeter.Parser)
+
+    self.damage = {}
+    self.healing = {}
+end
+
+function DamageMeter:Damage(source, action, amount)
+    self.damage[source] = self.damage[source] or {}
+
+    self.damage[source].total = self.damage[source].total or 0
+    self.damage[source].total = self.damage[source].total + amount
+
+    self.damage[source].actions = self.damage[source].actions or {}
+    self.damage[source].actions[action] = self.damage[source].actions[action] or 0
+    self.damage[source].actions[action] = self.damage[source].actions[action] + amount
+
+    self:Update()
+    self:Info()
+end
+
+function DamageMeter:Healing(source, action, amount)
+    self.healing[source] = self.healing[source] or {}
+
+    self.healing[source].total = self.healing[source].total or 0
+    self.healing[source].total = self.healing[source].total + amount
+
+    self.healing[source].actions = self.healing[source].actions or {}
+    self.healing[source].actions[action] = self.healing[source].actions[action] or 0
+    self.healing[source].actions[action] = self.healing[source].actions[action] + amount
+
+    self:Update()
+    self:Info()
 end
 
 function DamageMeter:Start()
 
     if not self.started then
         self:Reset()
-
         self.started = time()
     end
 
@@ -2919,88 +2951,142 @@ end
 
 function DamageMeter:Reset()
 
-    if not IsInInstance() then
-        self.damageTotal = 0
-        self.healingTotal = 0
+    if IsInInstance() then
+
+        for source, data in pairs(self.damage) do
+            data.actions = {}
+        end
+
+        for source, data in pairs(self.healing) do
+            data.actions = {}
+        end
+
+    else
+        self.damage = {}
+        self.healing = {}
     end
 
-    self.damage = 0
-    self.healing = 0
-end
-
-function DamageMeter:Heal(amount)
-    self.healing = self.healing + amount
-    self.healingTotal = self.healingTotal + amount
-    self:Update()
-end
-
-function DamageMeter:Damage(amount)
-    self.damage = self.damage + amount
-    self.damageTotal = self.damageTotal + amount
-    self:Update()
 end
 
 function DamageMeter:Update()
-    local elapsed = math.max(time() - (self.started or time()), 1)
-
-    _G[self.Frame:GetName() .. "TextLeft1"]:SetFontObject(GameTooltipText)
-    _G[self.Frame:GetName() .. "TextRight1"]:SetFontObject(GameTooltipText)
-
-    local damage
-    local damageTotal
-
-    damage = self.damage or 0
-    damageTotal = self.damageTotal or 0
-
-    local healing
-    local healingTotal
-
-    healing = self.healing or 0
-    healingTotal = self.healingTotal or 0
-
+    self.Frame:SetOwner(UIParent, "ANCHOR_NONE")
     self.Frame:ClearLines()
 
-    damage = string.format("%s (%s)", self.Format(damageTotal), self.Format(damage / elapsed))
-    healing = string.format("%s (%s)", self.Format(healingTotal), self.Format(healing / elapsed))
+    local elapsed = math.max(time() - (self.started or time()), 1)
 
-    self.Frame:AddDoubleLine("Damage", damage, nil, nil, nil, 1, 1, 1)
-    self.Frame:AddDoubleLine("Healing", healing, nil, nil, nil, 1, 1, 1)
+    -- Damage
 
-    self.Frame:Show()
+    local damage = 0
+    local damageTotal = 0
 
-    if not self:IsShown() then
-        self:Hide()
+    self.InfoFrame:AddLine("Damage")
+
+    for source, data in pairs(self.damage) do
+        damageTotal = damageTotal + data.total
+
+        for action, amount in pairs(data.actions) do
+            damage = damage + amount
+        end
+
     end
 
+    self.Frame:AddDoubleLine("Damage", string.format("%s (%s)", self.Format(damageTotal), self.Format(damage / elapsed)), nil, nil, nil, 1, 1, 1)
+
+    -- Healing
+
+    local healing = 0
+    local healingTotal = 0
+
+    self.InfoFrame:AddLine("Healing")
+
+    for source, data in pairs(self.healing) do
+        healingTotal = healingTotal + data.total
+
+        for action, amount in pairs(data.actions) do
+            healing = healing + amount
+        end
+
+    end
+
+    self.Frame:AddDoubleLine("Healing", string.format("%s (%s)", self.Format(healingTotal), self.Format(healing / elapsed)), nil, nil, nil, 1, 1, 1)
+
+    self.Frame:Show()
 end
 
-function DamageMeter:Position()
-    self.Frame:SetOwner(UIParent, "ANCHOR_NONE")
-    self.Frame:SetPoint("BOTTOMRIGHT", "UIParent", "BOTTOMRIGHT", -10, 10)
-    self.Frame:SetFrameStrata("LOW")
+function DamageMeter:Info()
+
+    if not self.InfoFrame.visible or (next(self.damage) == nil and next(self.healing) == nil) then
+        return
+    end
+
+    self.InfoFrame:SetOwner(self.Frame, "ANCHOR_TOPRIGHT")
+    self.InfoFrame:ClearLines()
+
+    -- Damage
+
+    if next(self.damage) then
+        self.InfoFrame:AddLine("Damage")
+
+        for source, data in pairs(self.damage) do
+            local sorted = {}
+
+            for action, amount in pairs(data.actions) do
+                table.insert(sorted, action)
+            end
+
+            table.sort(sorted, function(a, b)
+                return data.actions[a] > data.actions[b]
+            end)
+
+            for i = 1, #sorted do
+                local action = sorted[i]
+                local amount = data.actions[sorted[i]]
+
+                self.InfoFrame:AddDoubleLine(action, self.Format(amount), 1, 1, 1, 1, 1, 1)
+            end
+
+        end
+
+    end
+
+    -- Healing
+
+    if next(self.healing) then
+        self.InfoFrame:AddLine("Healing")
+
+        for source, data in pairs(self.healing) do
+            local sorted = {}
+
+            for action, amount in pairs(data.actions) do
+                table.insert(sorted, action)
+            end
+
+            table.sort(sorted, function(a, b)
+                return data.actions[a] > data.actions[b]
+            end)
+
+            for i = 1, #sorted do
+                local action = sorted[i]
+                local amount = data.actions[sorted[i]]
+
+                self.InfoFrame:AddDoubleLine(action, self.Format(amount), 1, 1, 1, 1, 1, 1)
+            end
+
+        end
+
+    end
+
+    self.InfoFrame:Show()
 end
 
-function DamageMeter:Show()
-    UI:SetOption("damageMeterShown", true)
-    self:Update()
-    UI:FadeIn(self.Frame)
-end
+function DamageMeter:ToggleInfo()
 
-function DamageMeter:Hide()
-    UI:SetOption("damageMeterShown", false)
-    UI:FadeOut(self.Frame)
-end
-
-function DamageMeter:IsShown()
-    return UI:GetOption("damageMeterShown")
-end
-
-function DamageMeter.Toggle()
-
-    if DamageMeter:IsShown() then
-        DamageMeter:Hide()
+    if self.InfoFrame.visible then
+        self.InfoFrame.visible = false
+        self.InfoFrame:Hide()
     else
-        DamageMeter:Show()
+        self.InfoFrame.visible = true
+        self:Info()
     end
 
 end
@@ -3051,11 +3137,11 @@ function DamageMeter.Parser()
         DamageMeter:Start()
 
         if token == "SPELL_HEAL" or token == "SPELL_PERIODIC_HEAL" then
-            DamageMeter:Heal(arg4 - arg5 + arg6)
+            DamageMeter:Healing(sourceName, arg2, arg4 - arg5 + arg6)
         elseif token == "SWING_DAMAGE" then
-            DamageMeter:Damage(arg1 + (arg6 or 0))
+            DamageMeter:Damage(sourceName, "Auto Attack", arg1 + (arg6 or 0))
         elseif token == "SWING_MISSED" and arg1 == "ABSORB" then
-            DamageMeter:Damage(arg3)
+            DamageMeter:Damage(sourceName, arg2, arg3)
         elseif
         token == "SPELL_DAMAGE" or
         token == "SPELL_PERIODIC_DAMAGE" or
@@ -3064,7 +3150,7 @@ function DamageMeter.Parser()
         token == "SPELL_EXTRA_ATTACKS" or
         token == "DAMAGE_SHIELD" or
         token == "DAMAGE_SPLIT" then
-            DamageMeter:Damage(arg4 + (arg9 or 0))
+            DamageMeter:Damage(sourceName, arg2, arg4 + (arg9 or 0))
         elseif
         arg4 == "ABSORB" and (
             token == "SPELL_MISSED" or
@@ -3073,9 +3159,8 @@ function DamageMeter.Parser()
             token == "SPELL_BUILDING_MISSED" or
             token == "DAMAGE_SHIELD_MISSED"
         ) then
-            DamageMeter:Damage(arg6)
+            DamageMeter:Damage(sourceName, arg2, arg6)
         end
 
     end
-
 end
