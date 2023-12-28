@@ -827,27 +827,27 @@ local options = {
                 }
             }
         },
-        damageMeter = {
-            name = "Damage Meter",
-            type = "group",
-            order = 11,
-            args = {
-                damageMeterModule = {
-                    name = "Enable Damage Meter Module",
-                    type = "toggle",
-                    width = "full",
-                    order = 0,
-                    get = function()
-                        return UI:GetOption("damageMeterModule")
-                    end,
-                    set = function(info, value)
-                        UI:SetOption("damageMeterModule", value)
-                        ReloadUI()
-                    end,
-                    confirm = "ConfirmReload"
-                }
-            }
-        }
+        -- damageMeter = {
+        --     name = "Damage Meter",
+        --     type = "group",
+        --     order = 11,
+        --     args = {
+        --         damageMeterModule = {
+        --             name = "Enable Damage Meter Module",
+        --             type = "toggle",
+        --             width = "full",
+        --             order = 0,
+        --             get = function()
+        --                 return UI:GetOption("damageMeterModule")
+        --             end,
+        --             set = function(info, value)
+        --                 UI:SetOption("damageMeterModule", value)
+        --                 ReloadUI()
+        --             end,
+        --             confirm = "ConfirmReload"
+        --         }
+        --     }
+        -- }
     }
 }
 
@@ -937,10 +937,10 @@ local defaults = {
         tooltipsUnitInCombat = true,
         tooltipsActionInCombat = true,
 
-        -- Damage Meter Module
-        damageMeterModule = true,
-        damageMeter = false,
-        damageMeterInfo = false,
+        -- -- Damage Meter Module
+        -- damageMeterModule = true,
+        -- damageMeter = false,
+        -- damageMeterInfo = false,
 
     }
 }
@@ -1035,9 +1035,9 @@ function UI:OnEnable()
         Tooltips:Enable()
     end
 
-    if self:GetOption("damageMeterModule") then
-        DamageMeter:Enable()
-    end
+    -- if self:GetOption("damageMeterModule") then
+    --     DamageMeter:Enable()
+    -- end
 
     for event in pairs(self.events) do
         self:RegisterEvent(event, "OnEvent")
@@ -2847,334 +2847,334 @@ end
 -- Damage Meter
 --------------------------------------------------------------------------------
 
-function DamageMeter:Enable()
-    self.Frame = CreateFrame("GameTooltip", "DamageMeter", UIParent, "SharedTooltipTemplate")
-    self.Frame:SetOwner(UIParent, "ANCHOR_NONE")
-    self.Frame:SetFrameStrata("LOW")
+-- function DamageMeter:Enable()
+--     self.Frame = CreateFrame("GameTooltip", "DamageMeter", UIParent, "SharedTooltipTemplate")
+--     self.Frame:SetOwner(UIParent, "ANCHOR_NONE")
+--     self.Frame:SetFrameStrata("LOW")
 
-    _G[self.Frame:GetName() .. "TextLeft1"]:SetFontObject(GameTooltipText)
-    _G[self.Frame:GetName() .. "TextRight1"]:SetFontObject(GameTooltipText)
+--     _G[self.Frame:GetName() .. "TextLeft1"]:SetFontObject(GameTooltipText)
+--     _G[self.Frame:GetName() .. "TextRight1"]:SetFontObject(GameTooltipText)
 
-    self.Frame:SetScript("OnMouseUp", function(self, button)
+--     self.Frame:SetScript("OnMouseUp", function(self, button)
 
-        if button == "LeftButton" then
-            DamageMeter:ToggleInfo()
-        end
+--         if button == "LeftButton" then
+--             DamageMeter:ToggleInfo()
+--         end
 
-    end)
+--     end)
 
-    UI:Event("PLAYER_ENTERING_WORLD", function()
-        DamageMeter:Update()
-    end)
+--     UI:Event("PLAYER_ENTERING_WORLD", function()
+--         DamageMeter:Update()
+--     end)
 
-    UI:Event("CINEMATIC_STOP", function()
-        DamageMeter:Update()
-    end)
+--     UI:Event("CINEMATIC_STOP", function()
+--         DamageMeter:Update()
+--     end)
 
-    UI:Event("COMBAT_LOG_EVENT_UNFILTERED", DamageMeter.Parser)
+--     UI:Event("COMBAT_LOG_EVENT_UNFILTERED", DamageMeter.Parser)
 
-    self.damage = {}
-    self.healing = {}
+--     self.damage = {}
+--     self.healing = {}
 
-    UI:RegisterChatCommand("damage", function()
-        DamageMeter:Toggle()
-    end)
-end
+--     UI:RegisterChatCommand("damage", function()
+--         DamageMeter:Toggle()
+--     end)
+-- end
 
-function DamageMeter:Damage(source, action, amount)
+-- function DamageMeter:Damage(source, action, amount)
 
-    if amount == 0 then
-        return
-    end
+--     if amount == 0 then
+--         return
+--     end
 
-    self.damage[source] = self.damage[source] or {}
+--     self.damage[source] = self.damage[source] or {}
 
-    self.damage[source].total = self.damage[source].total or 0
-    self.damage[source].total = self.damage[source].total + amount
+--     self.damage[source].total = self.damage[source].total or 0
+--     self.damage[source].total = self.damage[source].total + amount
 
-    self.damage[source].actions = self.damage[source].actions or {}
-    self.damage[source].actions[action] = self.damage[source].actions[action] or 0
-    self.damage[source].actions[action] = self.damage[source].actions[action] + amount
+--     self.damage[source].actions = self.damage[source].actions or {}
+--     self.damage[source].actions[action] = self.damage[source].actions[action] or 0
+--     self.damage[source].actions[action] = self.damage[source].actions[action] + amount
 
-    self:Update()
-end
+--     self:Update()
+-- end
 
-function DamageMeter:Healing(source, action, amount)
+-- function DamageMeter:Healing(source, action, amount)
 
-    if amount == 0 then
-        return
-    end
+--     if amount == 0 then
+--         return
+--     end
 
-    self.healing[source] = self.healing[source] or {}
+--     self.healing[source] = self.healing[source] or {}
 
-    self.healing[source].total = self.healing[source].total or 0
-    self.healing[source].total = self.healing[source].total + amount
+--     self.healing[source].total = self.healing[source].total or 0
+--     self.healing[source].total = self.healing[source].total + amount
 
-    self.healing[source].actions = self.healing[source].actions or {}
-    self.healing[source].actions[action] = self.healing[source].actions[action] or 0
-    self.healing[source].actions[action] = self.healing[source].actions[action] + amount
+--     self.healing[source].actions = self.healing[source].actions or {}
+--     self.healing[source].actions[action] = self.healing[source].actions[action] or 0
+--     self.healing[source].actions[action] = self.healing[source].actions[action] + amount
 
-    self:Update()
-end
+--     self:Update()
+-- end
 
-function DamageMeter:Start()
+-- function DamageMeter:Start()
 
-    if not self.started then
-        self:Reset()
-        self.started = time()
-    end
+--     if not self.started then
+--         self:Reset()
+--         self.started = time()
+--     end
 
-    if self.timer then
-        self.timer:Cancel()
-        self.timer = nil
-    end
+--     if self.timer then
+--         self.timer:Cancel()
+--         self.timer = nil
+--     end
 
-    self.timer = C_Timer.NewTimer(2, function(self)
+--     self.timer = C_Timer.NewTimer(2, function(self)
 
-        if DamageMeter.started and not InCombatLockdown() then
-            DamageMeter:Stop()
-        end
+--         if DamageMeter.started and not InCombatLockdown() then
+--             DamageMeter:Stop()
+--         end
 
-    end)
-end
+--     end)
+-- end
 
-function DamageMeter:Stop()
+-- function DamageMeter:Stop()
 
-    if self.started then
-        self.started = nil
-    end
+--     if self.started then
+--         self.started = nil
+--     end
 
-end
+-- end
 
-function DamageMeter:Reset()
+-- function DamageMeter:Reset()
 
-    if IsInInstance() then
+--     if IsInInstance() then
 
-        for source, data in pairs(self.damage) do
-            data.actions = {}
-        end
+--         for source, data in pairs(self.damage) do
+--             data.actions = {}
+--         end
 
-        for source, data in pairs(self.healing) do
-            data.actions = {}
-        end
+--         for source, data in pairs(self.healing) do
+--             data.actions = {}
+--         end
 
-    else
-        self.damage = {}
-        self.healing = {}
-    end
+--     else
+--         self.damage = {}
+--         self.healing = {}
+--     end
 
-end
+-- end
 
-function DamageMeter:Update()
+-- function DamageMeter:Update()
 
-    if not UI:GetOption("damageMeter") then
-        return
-    end
+--     if not UI:GetOption("damageMeter") then
+--         return
+--     end
 
-    self.Frame:SetOwner(UIParent, "ANCHOR_NONE")
-    self.Frame:ClearLines()
+--     self.Frame:SetOwner(UIParent, "ANCHOR_NONE")
+--     self.Frame:ClearLines()
 
-    local elapsed = math.max(time() - (self.started or time()), 1)
+--     local elapsed = math.max(time() - (self.started or time()), 1)
 
-    -- Damage
+--     -- Damage
 
-    local damage = 0
-    local damageTotal = 0
+--     local damage = 0
+--     local damageTotal = 0
 
-    for source, data in pairs(self.damage) do
-        damageTotal = damageTotal + data.total
+--     for source, data in pairs(self.damage) do
+--         damageTotal = damageTotal + data.total
 
-        for action, amount in pairs(data.actions) do
-            damage = damage + amount
-        end
+--         for action, amount in pairs(data.actions) do
+--             damage = damage + amount
+--         end
 
-    end
+--     end
 
-    self.Frame:AddDoubleLine("Damage", string.format("%s (%s)", self.Format(damageTotal), self.Format(damage / elapsed)), nil, nil, nil, 1, 1, 1)
+--     self.Frame:AddDoubleLine("Damage", string.format("%s (%s)", self.Format(damageTotal), self.Format(damage / elapsed)), nil, nil, nil, 1, 1, 1)
 
-    if UI:GetOption("damageMeterInfo") then
+--     if UI:GetOption("damageMeterInfo") then
 
-        for source, data in pairs(self.damage) do
-            local sorted = {}
+--         for source, data in pairs(self.damage) do
+--             local sorted = {}
 
-            damageTotal = 0
+--             damageTotal = 0
 
-            for action, amount in pairs(data.actions) do
-                table.insert(sorted, action)
-                damageTotal = damageTotal + amount
-            end
+--             for action, amount in pairs(data.actions) do
+--                 table.insert(sorted, action)
+--                 damageTotal = damageTotal + amount
+--             end
 
-            self.Frame:AddLine(" ")
-            self.Frame:AddDoubleLine(source, self.Format(damageTotal), nil, nil, nil, 1, 1, 1)
+--             self.Frame:AddLine(" ")
+--             self.Frame:AddDoubleLine(source, self.Format(damageTotal), nil, nil, nil, 1, 1, 1)
 
-            table.sort(sorted, function(a, b)
-                return data.actions[a] > data.actions[b]
-            end)
+--             table.sort(sorted, function(a, b)
+--                 return data.actions[a] > data.actions[b]
+--             end)
 
-            for i = 1, #sorted do
-                local action = sorted[i]
-                local amount = data.actions[sorted[i]]
+--             for i = 1, #sorted do
+--                 local action = sorted[i]
+--                 local amount = data.actions[sorted[i]]
 
-                self.Frame:AddDoubleLine(action, self.Format(amount), 1, 1, 1, 1, 1, 1)
-            end
+--                 self.Frame:AddDoubleLine(action, self.Format(amount), 1, 1, 1, 1, 1, 1)
+--             end
 
-        end
+--         end
 
-    end
+--     end
 
-    -- Separator
+--     -- Separator
 
-    if UI:GetOption("damageMeterInfo") and next(self.damage) then
-        self.Frame:AddLine(" ")
-    end
+--     if UI:GetOption("damageMeterInfo") and next(self.damage) then
+--         self.Frame:AddLine(" ")
+--     end
 
-    -- Healing
+--     -- Healing
 
-    local healing = 0
-    local healingTotal = 0
+--     local healing = 0
+--     local healingTotal = 0
 
-    for source, data in pairs(self.healing) do
-        healingTotal = healingTotal + data.total
+--     for source, data in pairs(self.healing) do
+--         healingTotal = healingTotal + data.total
 
-        for action, amount in pairs(data.actions) do
-            healing = healing + amount
-        end
+--         for action, amount in pairs(data.actions) do
+--             healing = healing + amount
+--         end
 
-    end
+--     end
 
-    self.Frame:AddDoubleLine("Healing", string.format("%s (%s)", self.Format(healingTotal), self.Format(healing / elapsed)), nil, nil, nil, 1, 1, 1)
+--     self.Frame:AddDoubleLine("Healing", string.format("%s (%s)", self.Format(healingTotal), self.Format(healing / elapsed)), nil, nil, nil, 1, 1, 1)
 
-    if UI:GetOption("damageMeterInfo") then
+--     if UI:GetOption("damageMeterInfo") then
 
-        for source, data in pairs(self.healing) do
-            local sorted = {}
+--         for source, data in pairs(self.healing) do
+--             local sorted = {}
 
-            healingTotal = 0
+--             healingTotal = 0
 
-            for action, amount in pairs(data.actions) do
-                table.insert(sorted, action)
-                healingTotal = healingTotal + amount
-            end
+--             for action, amount in pairs(data.actions) do
+--                 table.insert(sorted, action)
+--                 healingTotal = healingTotal + amount
+--             end
 
-            self.Frame:AddLine(" ")
-            self.Frame:AddDoubleLine(source, self.Format(healingTotal), nil, nil, nil, 1, 1, 1)
+--             self.Frame:AddLine(" ")
+--             self.Frame:AddDoubleLine(source, self.Format(healingTotal), nil, nil, nil, 1, 1, 1)
 
-            table.sort(sorted, function(a, b)
-                return data.actions[a] > data.actions[b]
-            end)
+--             table.sort(sorted, function(a, b)
+--                 return data.actions[a] > data.actions[b]
+--             end)
 
-            for i = 1, #sorted do
-                local action = sorted[i]
-                local amount = data.actions[sorted[i]]
+--             for i = 1, #sorted do
+--                 local action = sorted[i]
+--                 local amount = data.actions[sorted[i]]
 
-                self.Frame:AddDoubleLine(action, self.Format(amount), 1, 1, 1, 1, 1, 1)
-            end
+--                 self.Frame:AddDoubleLine(action, self.Format(amount), 1, 1, 1, 1, 1, 1)
+--             end
 
-        end
+--         end
 
-    end
+--     end
 
-    self.Frame:Show()
-    self.Frame:SetPoint("BOTTOMRIGHT", UIParent, "BOTTOMRIGHT", -10, 10)
-end
+--     self.Frame:Show()
+--     self.Frame:SetPoint("BOTTOMRIGHT", UIParent, "BOTTOMRIGHT", -10, 10)
+-- end
 
-function DamageMeter:Toggle()
+-- function DamageMeter:Toggle()
 
-    if UI:GetOption("damageMeter") then
-        self.Frame:Hide()
-        UI:SetOption("damageMeter", false)
-    else
-        UI:SetOption("damageMeter", true)
-        self:Update()
-    end
+--     if UI:GetOption("damageMeter") then
+--         self.Frame:Hide()
+--         UI:SetOption("damageMeter", false)
+--     else
+--         UI:SetOption("damageMeter", true)
+--         self:Update()
+--     end
 
-end
+-- end
 
-function DamageMeter:ToggleInfo()
+-- function DamageMeter:ToggleInfo()
 
-    if UI:GetOption("damageMeterInfo") then
-        UI:SetOption("damageMeterInfo", false)
-    else
-        UI:SetOption("damageMeterInfo", true)
-    end
+--     if UI:GetOption("damageMeterInfo") then
+--         UI:SetOption("damageMeterInfo", false)
+--     else
+--         UI:SetOption("damageMeterInfo", true)
+--     end
 
-    self:Update()
-end
+--     self:Update()
+-- end
 
-function DamageMeter.Format(amount)
+-- function DamageMeter.Format(amount)
 
-    if amount > 999999999 then
-        return ("%02.3fB"):format(amount / 1000000000)
-    end
+--     if amount > 999999999 then
+--         return ("%02.3fB"):format(amount / 1000000000)
+--     end
 
-    if amount > 999999 then
-        return ("%02.2fM"):format(amount / 1000000)
-    end
+--     if amount > 999999 then
+--         return ("%02.2fM"):format(amount / 1000000)
+--     end
 
-    if amount > 9999 then
-        return ("%02.1fK"):format(amount / 1000)
-    end
+--     if amount > 9999 then
+--         return ("%02.1fK"):format(amount / 1000)
+--     end
 
-    return math.floor(amount)
-end
+--     return math.floor(amount)
+-- end
 
-function DamageMeter.Parser()
-    local
-    timestamp,
-    token,
-    hidding,
-    sourceGUID,
-    sourceName,
-    sourceFlag,
-    sourceFlag2,
-    targetGUID,
-    targetName,
-    targetFlag,
-    targetFlag2,
-    arg1,
-    arg2,
-    arg3,
-    arg4,
-    arg5,
-    arg6,
-    arg7,
-    arg8,
-    arg9,
-    arg10,
-    arg11 = CombatLogGetCurrentEventInfo()
+-- function DamageMeter.Parser()
+--     local
+--     timestamp,
+--     token,
+--     hidding,
+--     sourceGUID,
+--     sourceName,
+--     sourceFlag,
+--     sourceFlag2,
+--     targetGUID,
+--     targetName,
+--     targetFlag,
+--     targetFlag2,
+--     arg1,
+--     arg2,
+--     arg3,
+--     arg4,
+--     arg5,
+--     arg6,
+--     arg7,
+--     arg8,
+--     arg9,
+--     arg10,
+--     arg11 = CombatLogGetCurrentEventInfo()
 
-    if sourceGUID == UnitGUID("player") or sourceGUID == UnitGUID("pet") then
+--     if sourceGUID == UnitGUID("player") or sourceGUID == UnitGUID("pet") then
 
-        if token == "SPELL_HEAL" or token == "SPELL_PERIODIC_HEAL" then
-            DamageMeter:Start()
-            DamageMeter:Healing(sourceName, arg2, arg4 - arg5 + arg6)
-        elseif token == "SWING_DAMAGE" then
-            DamageMeter:Start()
-            DamageMeter:Damage(sourceName, "Auto Attack", arg1 + (arg6 or 0))
-        elseif token == "SWING_MISSED" and arg1 == "ABSORB" then
-            DamageMeter:Start()
-            DamageMeter:Damage(sourceName, arg2, arg3)
-        elseif
-        token == "SPELL_DAMAGE" or
-        token == "SPELL_PERIODIC_DAMAGE" or
-        token == "SPELL_BUILDING_DAMAGE" or
-        token == "RANGE_DAMAGE" or
-        token == "SPELL_EXTRA_ATTACKS" or
-        token == "DAMAGE_SHIELD" or
-        token == "DAMAGE_SPLIT" then
-            DamageMeter:Start()
-            DamageMeter:Damage(sourceName, arg2, arg4 + (arg9 or 0))
-        elseif
-        arg4 == "ABSORB" and (
-            token == "SPELL_MISSED" or
-            token == "RANGE_MISSED" or
-            token == "SPELL_PERIODIC_MISSED" or
-            token == "SPELL_BUILDING_MISSED" or
-            token == "DAMAGE_SHIELD_MISSED"
-        ) then
-            DamageMeter:Start()
-            DamageMeter:Damage(sourceName, arg2, arg6)
-        end
+--         if token == "SPELL_HEAL" or token == "SPELL_PERIODIC_HEAL" then
+--             DamageMeter:Start()
+--             DamageMeter:Healing(sourceName, arg2, arg4 - arg5 + arg6)
+--         elseif token == "SWING_DAMAGE" then
+--             DamageMeter:Start()
+--             DamageMeter:Damage(sourceName, "Auto Attack", arg1 + (arg6 or 0))
+--         elseif token == "SWING_MISSED" and arg1 == "ABSORB" then
+--             DamageMeter:Start()
+--             DamageMeter:Damage(sourceName, arg2, arg3)
+--         elseif
+--         token == "SPELL_DAMAGE" or
+--         token == "SPELL_PERIODIC_DAMAGE" or
+--         token == "SPELL_BUILDING_DAMAGE" or
+--         token == "RANGE_DAMAGE" or
+--         token == "SPELL_EXTRA_ATTACKS" or
+--         token == "DAMAGE_SHIELD" or
+--         token == "DAMAGE_SPLIT" then
+--             DamageMeter:Start()
+--             DamageMeter:Damage(sourceName, arg2, arg4 + (arg9 or 0))
+--         elseif
+--         arg4 == "ABSORB" and (
+--             token == "SPELL_MISSED" or
+--             token == "RANGE_MISSED" or
+--             token == "SPELL_PERIODIC_MISSED" or
+--             token == "SPELL_BUILDING_MISSED" or
+--             token == "DAMAGE_SHIELD_MISSED"
+--         ) then
+--             DamageMeter:Start()
+--             DamageMeter:Damage(sourceName, arg2, arg6)
+--         end
 
-    end
-end
+--     end
+-- end
