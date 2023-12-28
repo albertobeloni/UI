@@ -939,8 +939,8 @@ local defaults = {
 
         -- Damage Meter Module
         damageMeterModule = true,
-        damageMeter = true,
-        damageMeterInfo = true,
+        damageMeter = false,
+        damageMeterInfo = false,
 
     }
 }
@@ -2850,7 +2850,6 @@ end
 function DamageMeter:Enable()
     self.Frame = CreateFrame("GameTooltip", "DamageMeter", UIParent, "SharedTooltipTemplate")
     self.Frame:SetOwner(UIParent, "ANCHOR_NONE")
-    self.Frame:SetPoint("BOTTOMRIGHT", "UIParent", "BOTTOMRIGHT", -10, 10)
     self.Frame:SetFrameStrata("LOW")
 
     _G[self.Frame:GetName() .. "TextLeft1"]:SetFontObject(GameTooltipText)
@@ -2993,7 +2992,7 @@ function DamageMeter:Update()
 
     self.Frame:AddDoubleLine("Damage", string.format("%s (%s)", self.Format(damageTotal), self.Format(damage / elapsed)), nil, nil, nil, 1, 1, 1)
 
-    if UI:GetOption("damageMeterInfo") and next(self.damage) then
+    if UI:GetOption("damageMeterInfo") then
 
         for source, data in pairs(self.damage) do
             local sorted = {}
@@ -3023,6 +3022,8 @@ function DamageMeter:Update()
 
     end
 
+    -- Separator
+
     if UI:GetOption("damageMeterInfo") and next(self.damage) then
         self.Frame:AddLine(" ")
     end
@@ -3043,7 +3044,7 @@ function DamageMeter:Update()
 
     self.Frame:AddDoubleLine("Healing", string.format("%s (%s)", self.Format(healingTotal), self.Format(healing / elapsed)), nil, nil, nil, 1, 1, 1)
 
-    if UI:GetOption("damageMeterInfo") and next(self.healing) then
+    if UI:GetOption("damageMeterInfo") then
 
         for source, data in pairs(self.healing) do
             local sorted = {}
@@ -3074,6 +3075,7 @@ function DamageMeter:Update()
     end
 
     self.Frame:Show()
+    self.Frame:SetPoint("BOTTOMRIGHT", UIParent, "BOTTOMRIGHT", -10, 10)
 end
 
 function DamageMeter:Toggle()
@@ -3142,13 +3144,15 @@ function DamageMeter.Parser()
     arg11 = CombatLogGetCurrentEventInfo()
 
     if sourceGUID == UnitGUID("player") or sourceGUID == UnitGUID("pet") then
-        DamageMeter:Start()
 
         if token == "SPELL_HEAL" or token == "SPELL_PERIODIC_HEAL" then
+            DamageMeter:Start()
             DamageMeter:Healing(sourceName, arg2, arg4 - arg5 + arg6)
         elseif token == "SWING_DAMAGE" then
+            DamageMeter:Start()
             DamageMeter:Damage(sourceName, "Auto Attack", arg1 + (arg6 or 0))
         elseif token == "SWING_MISSED" and arg1 == "ABSORB" then
+            DamageMeter:Start()
             DamageMeter:Damage(sourceName, arg2, arg3)
         elseif
         token == "SPELL_DAMAGE" or
@@ -3158,6 +3162,7 @@ function DamageMeter.Parser()
         token == "SPELL_EXTRA_ATTACKS" or
         token == "DAMAGE_SHIELD" or
         token == "DAMAGE_SPLIT" then
+            DamageMeter:Start()
             DamageMeter:Damage(sourceName, arg2, arg4 + (arg9 or 0))
         elseif
         arg4 == "ABSORB" and (
@@ -3167,6 +3172,7 @@ function DamageMeter.Parser()
             token == "SPELL_BUILDING_MISSED" or
             token == "DAMAGE_SHIELD_MISSED"
         ) then
+            DamageMeter:Start()
             DamageMeter:Damage(sourceName, arg2, arg6)
         end
 
