@@ -26,7 +26,6 @@ local Menu = UI:NewModule("Menu")
 local BuffFrame = UI:NewModule("BuffFrame")
 local DebuffFrame = UI:NewModule("DebuffFrame")
 local Tooltips = UI:NewModule("Tooltips")
-local DamageMeter = UI:NewModule("DamageMeter")
 
 --------------------------------------------------------------------------------
 -- UI
@@ -826,28 +825,7 @@ local options = {
                     end
                 }
             }
-        },
-        -- damageMeter = {
-        --     name = "Damage Meter",
-        --     type = "group",
-        --     order = 11,
-        --     args = {
-        --         damageMeterModule = {
-        --             name = "Enable Damage Meter Module",
-        --             type = "toggle",
-        --             width = "full",
-        --             order = 0,
-        --             get = function()
-        --                 return UI:GetOption("damageMeterModule")
-        --             end,
-        --             set = function(info, value)
-        --                 UI:SetOption("damageMeterModule", value)
-        --                 ReloadUI()
-        --             end,
-        --             confirm = "ConfirmReload"
-        --         }
-        --     }
-        -- }
+        }
     }
 }
 
@@ -936,11 +914,6 @@ local defaults = {
         tooltipsModule = true,
         tooltipsUnitInCombat = true,
         tooltipsActionInCombat = true,
-
-        -- -- Damage Meter Module
-        -- damageMeterModule = true,
-        -- damageMeter = false,
-        -- damageMeterInfo = false,
 
     }
 }
@@ -1034,10 +1007,6 @@ function UI:OnEnable()
     if self:GetOption("tooltipsModule") then
         Tooltips:Enable()
     end
-
-    -- if self:GetOption("damageMeterModule") then
-    --     DamageMeter:Enable()
-    -- end
 
     for event in pairs(self.events) do
         self:RegisterEvent(event, "OnEvent")
