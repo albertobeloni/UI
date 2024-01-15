@@ -1064,6 +1064,10 @@ end
 -- Utilities
 --------------------------------------------------------------------------------
 
+function UI:ConfirmReload()
+    return "This action will reload the UI"
+end
+
 function UI:Event(event, callback)
 
     if not self.events[event] then
