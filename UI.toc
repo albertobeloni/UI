@@ -1,4 +1,4 @@
-## Interface: 100200
+## Interface: 100205
 ## Title: UI
 ## Notes: Customizable World of Warcraft UI
 ## Version: 1.1.1
