@@ -843,9 +843,9 @@ local defaults = {
         -- Action Bars Module
         actionBarsModule = true,
         actionBarsHideMacroNames = true,
-        actionBar1Condition = "[novehicleui, harm,exists,nodead][novehicleui, help,exists,combat][novehicleui, help,exists,group][novehicleui, combat] show; hide",
-        actionBar2Condition = "[novehicleui, mod:alt] show; hide",
-        actionBar3Condition = "[novehicleui, mod:alt] show; hide",
+        actionBar1Condition = "[novehicleui,harm,exists,nodead][novehicleui,help,exists,combat][novehicleui,help,exists,group][novehicleui,combat] show; hide",
+        actionBar2Condition = "[novehicleui,mod:alt] show; hide",
+        actionBar3Condition = "[novehicleui,mod:alt] show; hide",
         actionBar4Condition = "",
         actionBar5Condition = "",
         actionBar6Condition = "",
