@@ -843,10 +843,13 @@ local defaults = {
         -- Action Bars Module
         actionBarsModule = true,
         actionBarsHideMacroNames = true,
-        actionBar1Condition = "[novehicleui,harm,exists,nodead][novehicleui,help,exists,combat][novehicleui,help,exists,group][novehicleui,combat] show; hide",
-        actionBar2Condition = "[novehicleui,mod:alt] show; hide",
-        actionBar3Condition = "[novehicleui,mod:alt] show; hide",
-        actionBar4Condition = "",
+        -- actionBar1Condition = "[novehicleui,harm,exists,nodead][novehicleui,help,exists,combat][novehicleui,help,exists,group][novehicleui,combat] show; hide",
+        actionBar1Condition = "",
+        -- actionBar2Condition = "[novehicleui,mod:alt] show; hide",
+        -- actionBar3Condition = "[novehicleui,mod:alt] show; hide",
+        actionBar2Condition = "[mod:shift][harm,exists,nodead][help,exists,group][combat] show; hide",
+        actionBar3Condition = "[nomod:alt,harm,exists,nodead][nomod:alt,help,exists,group] hide; [mod:alt][nocombat] show; hide",
+        actionBar4Condition = "[mod:ctrl,mod:alt] show; hide",
         actionBar5Condition = "",
         actionBar6Condition = "",
         actionBar7Condition = "",
@@ -859,11 +862,11 @@ local defaults = {
 
         -- Pet Bar Module
         petActionBarModule = true,
-        petActionBarCondition = "[mod:ctrl,@pet,exists] show; hide",
+        petActionBarCondition = "[nomod:alt,mod:ctrl,@pet,exists] show; hide",
 
         -- Stance Bar Module
         stanceBarModule = true,
-        stanceBarCondition = "[mod:ctrl] show; hide",
+        stanceBarCondition = "[nomod:alt,mod:ctrl] show; hide",
 
         -- Status Tracking Bar Module
         statusTrackingBarModule = true,
@@ -874,7 +877,7 @@ local defaults = {
 
         -- Focus Frame Module
         focusFrameModule = true,
-        focusFrameCondition = "[@focus,exists] show; hide",
+        focusFrameCondition = "[mod:ctrl,mod:alt,harm,exists,nodead][mod:ctrl,mod:alt,help,exists,group] hide; [nomod:ctrl,nomod:alt,@focus,exists][mod:ctrl,@focus,exists][mod:alt,@focus,exists] show; hide",
 
         -- Pet Frame Module
         petFrameModule = true,
@@ -882,7 +885,8 @@ local defaults = {
 
         -- Target Frame Module
         targetFrameModule = true,
-        targetFrameCondition = "[harm,exists,nodead][help,exists,combat][help,exists,group] show; hide",
+        -- targetFrameCondition = "[harm,exists,nodead][help,exists,combat][help,exists,group] show; hide",
+        targetFrameCondition = "[mod:ctrl,mod:alt,exists] show; hide",
 
         -- Minimap Module
         minimapModule = true,
@@ -2644,6 +2648,18 @@ function BuffFrame:Enable()
     self.Frame.CollapseAndExpandButton:UpdateOrientation()
 
     self.Frame:SetBuffsExpandedState()
+
+    UI:FadeOut(self.Frame.CollapseAndExpandButton)
+
+    UI:SecureHookScript(self.Frame, "OnEnter", function(self)
+        UI:FadeIn(self.CollapseAndExpandButton)
+    end)
+
+    UI:SecureHookScript(self.Frame, "OnLeave", function(self)
+        UI:OnLeave(self:GetName(), function(self)
+            UI:FadeOut(self.CollapseAndExpandButton)
+        end, self)
+    end)
 
     UI:Event("PLAYER_ENTERING_WORLD", function()
         BuffFrame:Register()
