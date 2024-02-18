@@ -847,8 +847,8 @@ local defaults = {
         actionBar1Condition = "",
         -- actionBar2Condition = "[novehicleui,mod:alt] show; hide",
         -- actionBar3Condition = "[novehicleui,mod:alt] show; hide",
-        actionBar2Condition = "[mod:shift][harm,exists,nodead][help,exists,group][combat] show; hide",
-        actionBar3Condition = "[nomod:alt,harm,exists,nodead][nomod:alt,help,exists,group] hide; [mod:alt][nocombat] show; hide",
+        actionBar2Condition = "[flying] hide; [mod:shift][harm,exists,nodead][help,exists,group][combat] show; hide",
+        actionBar3Condition = "[flying][nomod:alt,harm,exists,nodead][nomod:alt,help,exists,group] hide; [mod:alt,nomod:ctrl] show; hide",
         actionBar4Condition = "[mod:ctrl,mod:alt] show; hide",
         actionBar5Condition = "",
         actionBar6Condition = "",
@@ -857,8 +857,8 @@ local defaults = {
 
         -- Paging Module
         pagingModule = false,
-        pagingDefaultPage = nil,
-        pagingCombatPage = nil,
+        pagingDefaultPage = 1,
+        pagingCombatPage = 2,
 
         -- Pet Bar Module
         petActionBarModule = true,
@@ -1640,6 +1640,10 @@ function Paging:Enable()
         Paging:Evaluate(event, ...)
     end)
 
+    UI:Event("UPDATE_STEALTH", function(event, ...)
+        Paging:Evaluate(event, ...)
+    end)
+
     UI:Event("UPDATE_BONUS_ACTIONBAR", function(event, ...)
         Paging:Evaluate(event, ...)
     end)
@@ -1670,6 +1674,10 @@ function Paging:Evaluate(event, ...)
 
     if event == "PLAYER_REGEN_DISABLED" or InCombatLockdown() or UnitAffectingCombat("player") then
         return self:Page(self.combatPage)
+    end
+
+    if IsStealthed() then
+        return self:Page(1)
     end
 
     if UnitCanAttack("player", "target") and not UnitIsDead("target") then
@@ -2330,6 +2338,7 @@ function Minimap:Enable()
         MinimapCluster.BorderTop,
         MinimapCluster.Tracking,
         MinimapCluster.ZoneTextButton,
+        MinimapCluster.InstanceDifficulty,
         TimeManagerClockButton,
         GameTimeFrame
     }
