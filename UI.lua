@@ -449,16 +449,30 @@ local options = {
                     end,
                     confirm = "ConfirmReload"
                 },
+                playerFramePowerBarCondition = {
+                    name = "Power Bar Condition",
+                    type = "input",
+                    width = "full",
+                    order = 3,
+                    get = function()
+                        return UI:GetOption("playerFramePowerBarCondition")
+                    end,
+                    set = function(info, value)
+                        UI:SetOption("playerFramePowerBarCondition", value)
+                        ReloadUI()
+                    end,
+                    confirm = "ConfirmReload"
+                },
                 focusFrameHeader = {
                     name = "Focus Frame",
                     type = "header",
-                    order = 3
+                    order = 4
                 },
                 focusFrameModule = {
                     name = "Enable Focus Frame Module",
                     type = "toggle",
                     width = "full",
-                    order = 4,
+                    order = 5,
                     get = function()
                         return UI:GetOption("focusFrameModule")
                     end,
@@ -472,7 +486,7 @@ local options = {
                     name = "Focus Frame Condition",
                     type = "input",
                     width = "full",
-                    order = 5,
+                    order = 6,
                     get = function()
                         return UI:GetOption("focusFrameCondition")
                     end,
@@ -485,13 +499,13 @@ local options = {
                 petFrameHeader = {
                     name = "Pet Frame",
                     type = "header",
-                    order = 6
+                    order = 7
                 },
                 petFrameModule = {
                     name = "Enable Pet Frame Module",
                     type = "toggle",
                     width = "full",
-                    order = 7,
+                    order = 8,
                     get = function()
                         return UI:GetOption("petFrameModule")
                     end,
@@ -505,7 +519,7 @@ local options = {
                     name = "Pet Frame Condition",
                     type = "input",
                     width = "full",
-                    order = 8,
+                    order = 9,
                     get = function()
                         return UI:GetOption("petFrameCondition")
                     end,
@@ -518,13 +532,13 @@ local options = {
                 targetFrameHeader = {
                     name = "Target Frame",
                     type = "header",
-                    order = 9
+                    order = 10
                 },
                 targetFrameModule = {
                     name = "Enable Target Frame Module",
                     type = "toggle",
                     width = "full",
-                    order = 10,
+                    order = 11,
                     get = function()
                         return UI:GetOption("targetFrameModule")
                     end,
@@ -538,7 +552,7 @@ local options = {
                     name = "Target Frame Condition",
                     type = "input",
                     width = "full",
-                    order = 11,
+                    order = 12,
                     get = function()
                         return UI:GetOption("targetFrameCondition")
                     end,
@@ -843,13 +857,10 @@ local defaults = {
         -- Action Bars Module
         actionBarsModule = true,
         actionBarsHideMacroNames = true,
-        -- actionBar1Condition = "[novehicleui,harm,exists,nodead][novehicleui,help,exists,combat][novehicleui,help,exists,group][novehicleui,combat] show; hide",
         actionBar1Condition = "",
-        -- actionBar2Condition = "[novehicleui,mod:alt] show; hide",
-        -- actionBar3Condition = "[novehicleui,mod:alt] show; hide",
         actionBar2Condition = "[flying] hide; [mod:shift][harm,exists,nodead][help,exists,group][combat] show; hide",
         actionBar3Condition = "[flying][nomod:alt,harm,exists,nodead][nomod:alt,help,exists,group] hide; [mod:alt,nomod:ctrl] show; hide",
-        actionBar4Condition = "[mod:ctrl,mod:alt] show; hide",
+        actionBar4Condition = "",
         actionBar5Condition = "",
         actionBar6Condition = "",
         actionBar7Condition = "",
@@ -874,6 +885,7 @@ local defaults = {
         -- Player Frame Module
         playerFrameModule = true,
         playerFrameCondition = "[@player,dead] hide; [harm,exists,nodead][help,exists,group][combat] show; hide",
+        playerFramePowerBarCondition = "[combat] hide; show",
 
         -- Focus Frame Module
         focusFrameModule = true,
@@ -1184,6 +1196,19 @@ end
 
 function UI:HasTarget()
     return UnitExists("target")
+end
+
+function UI:HideFrame(Frame)
+
+    if Frame then
+        Frame:UnregisterAllEvents()
+        UI:Unhook(Frame, "OnShow")
+        UI:SecureHookScript(Frame, "OnShow", function(self)
+            self:Hide()
+        end)
+        Frame:Hide()
+    end
+
 end
 
 --------------------------------------------------------------------------------
@@ -1999,6 +2024,30 @@ function PlayerFrame:Enable()
     self.Frame = _G["PlayerFrame"]
     self.condition = "playerFrameCondition"
 
+    self.powerBars = {
+        nil,
+        _G["PaladinPowerBarFrame"],
+        nil,
+        _G["RogueComboPointBarFrame"],
+        nil,
+        _G["RuneFrame"],
+        nil,
+        _G["MageArcaneChargesFrame"],
+        _G["WarlockPowerFrame"],
+        _G["MonkHarmonyBarFrame"],
+        _G["DruidComboPointBarFrame"],
+        nil,
+        _G["EssencePlayerFrame"]
+    }
+
+    _, _, self.classID = UnitClass("player")
+
+    self.PowerBar = self.powerBars[self.classID]
+
+    UI:Protect(self.PowerBar)
+
+    self.powerBarCondition = "playerFramePowerBarCondition"
+
     UI:Event("PLAYER_ENTERING_WORLD", function(event, ...)
         PlayerFrame:Evaluate(event, ...)
     end)
@@ -2057,6 +2106,16 @@ function PlayerFrame:Register()
 
     if UI:GetOption(self.condition) ~= "" then
         UI:Register(self.Frame, "visibility", UI:GetOption(self.condition))
+    end
+
+    if UI:GetOption(self.powerBarCondition) ~= "" and self.PowerBar then
+        local powerBarCondition = UI:GetOption(self.powerBarCondition)
+
+        if self.classID == 11 then
+            powerBarCondition = "[noform:2] hide; " .. powerBarCondition
+        end
+
+        UI:Register(self.PowerBar, "visibility", powerBarCondition)
     end
 
 end
