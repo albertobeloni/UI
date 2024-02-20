@@ -885,7 +885,8 @@ local defaults = {
         -- Player Frame Module
         playerFrameModule = true,
         playerFrameCondition = "[@player,dead] hide; [harm,exists,nodead][help,exists,group][combat] show; hide",
-        playerFramePowerBarCondition = "[combat] hide; show",
+        -- playerFrameCondition = "[@player,dead] hide; [mod:ctrl,mod:alt] show; hide",
+        playerFramePowerBarCondition = "[harm,exists,nodead][help,exists,group][combat] hide; show",
 
         -- Focus Frame Module
         focusFrameModule = true,
@@ -897,8 +898,8 @@ local defaults = {
 
         -- Target Frame Module
         targetFrameModule = true,
-        -- targetFrameCondition = "[harm,exists,nodead][help,exists,combat][help,exists,group] show; hide",
-        targetFrameCondition = "[mod:ctrl,mod:alt,exists] show; hide",
+        targetFrameCondition = "[harm,exists,nodead][help,exists,combat][help,exists,group] show; hide",
+        -- targetFrameCondition = "[mod:ctrl,mod:alt,exists] show; hide",
 
         -- Minimap Module
         minimapModule = true,
@@ -1070,7 +1071,11 @@ function UI:GetOption(key)
 end
 
 function UI:Protect(Frame)
-    self.protectedFrames[Frame] = true
+
+    if Frame then
+        self.protectedFrames[Frame] = true
+    end
+
 end
 
 function UI:Lock(Frame)
@@ -2144,17 +2149,17 @@ function PlayerFrame:Evaluate(event, ...)
         return
     end
 
-    if event == "UNIT_HEALTH" and not InCombatLockdown() then
+    -- if event == "UNIT_HEALTH" and not InCombatLockdown() then
 
-        if UnitHealth("player") ~= UnitHealthMax("player") then
-            self:Show()
-            return
-        else
-            self:Register()
-            return
-        end
+    --     if UnitHealth("player") ~= UnitHealthMax("player") then
+    --         self:Show()
+    --         return
+    --     else
+    --         self:Register()
+    --         return
+    --     end
 
-    end
+    -- end
 
     self:Register()
 end
