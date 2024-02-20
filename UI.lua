@@ -884,8 +884,8 @@ local defaults = {
 
         -- Player Frame Module
         playerFrameModule = true,
-        playerFrameCondition = "[@player,dead] hide; [harm,exists,nodead][help,exists,group][combat] show; hide",
-        -- playerFrameCondition = "[@player,dead] hide; [mod:ctrl,mod:alt] show; hide",
+        -- playerFrameCondition = "[@player,dead] hide; [harm,exists,nodead][help,exists,group][combat] show; hide",
+        playerFrameCondition = "[@player,dead] hide; [mod:ctrl,mod:alt] show; hide",
         playerFramePowerBarCondition = "[harm,exists,nodead][help,exists,group][combat] hide; show",
 
         -- Focus Frame Module
@@ -898,8 +898,8 @@ local defaults = {
 
         -- Target Frame Module
         targetFrameModule = true,
-        targetFrameCondition = "[harm,exists,nodead][help,exists,combat][help,exists,group] show; hide",
-        -- targetFrameCondition = "[mod:ctrl,mod:alt,exists] show; hide",
+        -- targetFrameCondition = "[harm,exists,nodead][help,exists,combat][help,exists,group] show; hide",
+        targetFrameCondition = "[mod:ctrl,mod:alt,exists] show; hide",
 
         -- Minimap Module
         minimapModule = true,
