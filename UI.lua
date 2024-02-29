@@ -19,6 +19,7 @@ local PlayerFrame = UI:NewModule("PlayerFrame")
 local FocusFrame = UI:NewModule("FocusFrame")
 local PetFrame = UI:NewModule("PetFrame")
 local TargetFrame = UI:NewModule("TargetFrame")
+local Nameplate = UI:NewModule("Nameplate")
 local Minimap = UI:NewModule("Minimap")
 local Layouts = UI:NewModule("Layouts")
 local Bags = UI:NewModule("Bags")
@@ -564,10 +565,45 @@ local options = {
                 }
             }
         },
+        nameplate = {
+            name = "Nameplate",
+            type = "group",
+            order = 6,
+            args = {
+                nameplateModule = {
+                    name = "Enable Nameplate Module",
+                    type = "toggle",
+                    width = "full",
+                    order = 0,
+                    get = function()
+                        return UI:GetOption("nameplateModule")
+                    end,
+                    set = function(info, value)
+                        UI:SetOption("nameplateModule", value)
+                        ReloadUI()
+                    end,
+                    confirm = "ConfirmReload"
+                },
+                nameplateHideBuffs = {
+                    name = "Hide Buffs",
+                    type = "toggle",
+                    width = "full",
+                    order = 1,
+                    get = function()
+                        return UI:GetOption("nameplateHideBuffs")
+                    end,
+                    set = function(info, value)
+                        UI:SetOption("nameplateHideBuffs", value)
+                        ReloadUI()
+                    end,
+                    confirm = "ConfirmReload"
+                }
+            }
+        },
         minimap = {
             name = "Minimap",
             type = "group",
-            order = 6,
+            order = 7,
             args = {
                 minimapModule = {
                     name = "Enable Minimap Module",
@@ -602,7 +638,7 @@ local options = {
         layouts = {
             name = "Layouts",
             type = "group",
-            order = 7,
+            order = 8,
             args = {
                 layoutsModule = {
                     name = "Enable Layouts Module",
@@ -683,7 +719,7 @@ local options = {
         bags = {
             name = "Bags",
             type = "group",
-            order = 8,
+            order = 9,
             args = {
                 bagsModule = {
                     name = "Enable Bags Module",
@@ -704,7 +740,7 @@ local options = {
         menu = {
             name = "Menu",
             type = "group",
-            order = 9,
+            order = 10,
             args = {
                 menuModule = {
                     name = "Enable Menu Module",
@@ -725,7 +761,7 @@ local options = {
         buffAndDebuff = {
             name = "Buff and Debuff",
             type = "group",
-            order = 10,
+            order = 11,
             args = {
                 buffFrameHeader = {
                     name = "Buff Frame",
@@ -798,7 +834,7 @@ local options = {
         tooltips = {
             name = "Tooltips",
             type = "group",
-            order = 11,
+            order = 12,
             args = {
                 tooltipsModule = {
                     name = "Enable Tooltips Module",
@@ -884,9 +920,9 @@ local defaults = {
 
         -- Player Frame Module
         playerFrameModule = true,
-        -- playerFrameCondition = "[@player,dead] hide; [harm,exists,nodead][help,exists,group][combat] show; hide",
-        playerFrameCondition = "[@player,dead] hide; [mod:ctrl,mod:alt] show; hide",
-        playerFramePowerBarCondition = "[harm,exists,nodead][help,exists,group][combat] hide; show",
+        playerFrameCondition = "[@player,dead] hide; [mod:ctrl,mod:alt][harm,exists,nodead][help,exists,group][combat] show; hide",
+        -- playerFrameCondition = "[@player,dead] hide; [mod:ctrl,mod:alt] show; hide",
+        playerFramePowerBarCondition = "[harm,exists,nodead,combat][help,exists,group,combat][combat] hide; show",
 
         -- Focus Frame Module
         focusFrameModule = true,
@@ -900,6 +936,10 @@ local defaults = {
         targetFrameModule = true,
         -- targetFrameCondition = "[harm,exists,nodead][help,exists,combat][help,exists,group] show; hide",
         targetFrameCondition = "[mod:ctrl,mod:alt,exists] show; hide",
+
+        -- Nameplate Module
+        nameplateModule = true,
+        nameplateHideBuffs = true,
 
         -- Minimap Module
         minimapModule = true,
@@ -994,6 +1034,10 @@ function UI:OnEnable()
 
     if self:GetOption("targetFrameModule") then
         TargetFrame:Enable()
+    end
+
+    if self:GetOption("nameplateModule") then
+        Nameplate:Enable()
     end
 
     if self:GetOption("minimapModule") then
@@ -2379,6 +2423,24 @@ end
 
 function TargetFrame:Evaluate(event, ...)
     self:Register()
+end
+
+--------------------------------------------------------------------------------
+-- Nameplate
+--------------------------------------------------------------------------------
+
+function Nameplate:Enable()
+
+    UI:Event("NAME_PLATE_UNIT_ADDED", function(event, unit)
+        self.Frame = nil
+        self.Frame = C_NamePlate.GetNamePlateForUnit("player")
+
+        if self.Frame and UI:GetOption("nameplateHideBuffs") then
+            UI:HideFrame(self.Frame.UnitFrame.BuffFrame)
+        end
+
+    end)
+
 end
 
 --------------------------------------------------------------------------------
