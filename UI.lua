@@ -3111,36 +3111,48 @@ function Camera:Enable()
     self.view = nil
 
     UI:Event("PLAYER_ENTERING_WORLD", function()
-        Camera:Update(UI:GetOption("cameraDefaultView"))
+
+        if not IsMounted() and not IsResting() then
+            Camera:Update(UI:GetOption("cameraDefaultView"))
+        elseif not IsMounted() and IsResting() then
+            Camera:Update(UI:GetOption("cameraRestingView"))
+        elseif IsMounted() then
+            Camera:Update(UI:GetOption("cameraMountedView"))
+        end
+
     end)
 
     UI:Event("PLAYER_REGEN_DISABLED", function()
         Camera:Update(UI:GetOption("cameraCombatView"))
     end)
     UI:Event("PLAYER_REGEN_ENABLED", function()
-        Camera:Update(UI:GetOption("cameraDefaultView"))
+
+        if not IsMounted() and not InCombatLockdown() then
+            Camera:Update(UI:GetOption("cameraDefaultView"))
+        end
+
     end)
 
     UI:Event("PLAYER_MOUNT_DISPLAY_CHANGED", function()
 
         if IsMounted() then
             Camera:Update(UI:GetOption("cameraMountedView"))
-        else
+        elseif not InCombatLockdown() then
             Camera:Update(UI:GetOption("cameraDefaultView"))
         end
 
     end)
 
-    UI:Event("UNIT_ENTERING_VEHICLE", function(event, unit)
+    UI:Event("UNIT_ENTERED_VEHICLE", function(event, unit)
 
         if unit == "player" then
             Camera:Update(UI:GetOption("cameraMountedView"))
         end
 
     end)
-    UI:Event("UNIT_EXITING_VEHICLE", function(event, unit)
+    UI:Event("UNIT_EXITED_VEHICLE", function(event, unit)
 
-        if unit == "player" then
+        if unit == "player" and not IsMounted() and not InCombatLockdown() then
             Camera:Update(UI:GetOption("cameraDefaultView"))
         end
 
@@ -3152,7 +3164,7 @@ function Camera:Enable()
             Camera:Update(UI:GetOption("cameraCombatView"))
         elseif UnitCanAssist("player", "target") and UnitIsPlayer("target") and not InCombatLockdown() then
             Camera:Update(UI:GetOption("cameraCombatView"))
-        elseif not InCombatLockdown() then
+        elseif not IsMounted() and not InCombatLockdown() then
             Camera:Update(UI:GetOption("cameraDefaultView"))
         end
 
@@ -3160,9 +3172,9 @@ function Camera:Enable()
 
     UI:Event("PLAYER_UPDATE_RESTING", function()
 
-        if IsResting() then
+        if IsResting() and not IsMounted() then
             Camera:Update(UI:GetOption("cameraRestingView"))
-        else
+        elseif not IsMounted() then
             Camera:Update(UI:GetOption("cameraDefaultView"))
         end
 
