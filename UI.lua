@@ -3179,6 +3179,17 @@ function Camera:Enable()
         end
 
     end)
+
+    UI:Event("UPDATE_SHAPESHIFT_FORM", function()
+        local _, class = UnitClass("player")
+
+        if class == "DRUID" and GetShapeshiftForm() == 3 then
+            Camera:Update(UI:GetOption("cameraMountedView"))
+        elseif class == "DRUID" then
+            Camera:Update(UI:GetOption("cameraDefaultView"))
+        end
+
+    end)
 end
 
 function Camera:Update(view)
