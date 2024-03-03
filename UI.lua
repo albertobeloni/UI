@@ -27,6 +27,7 @@ local Menu = UI:NewModule("Menu")
 local BuffFrame = UI:NewModule("BuffFrame")
 local DebuffFrame = UI:NewModule("DebuffFrame")
 local Tooltips = UI:NewModule("Tooltips")
+local Camera = UI:NewModule("Camera")
 
 --------------------------------------------------------------------------------
 -- UI
@@ -875,7 +876,84 @@ local options = {
                     end
                 }
             }
-        }
+        },
+        camera = {
+            name = "Camera",
+            type = "group",
+            order = 13,
+            args = {
+                cameraModule = {
+                    name = "Enable Camera Module",
+                    type = "toggle",
+                    width = "full",
+                    order = 0,
+                    get = function()
+                        return UI:GetOption("cameraModule")
+                    end,
+                    set = function(info, value)
+                        UI:SetOption("cameraModule", value)
+                        ReloadUI()
+                    end,
+                    confirm = "ConfirmReload"
+                },
+                cameraDefaultView = {
+                    name = "Default Camera View",
+                    type = "select",
+                    width = "full",
+                    order = 1,
+                    values = {1,2,3,4,5},
+                    style = "dropdown",
+                    get = function()
+                        return UI:GetOption("cameraDefaultView")
+                    end,
+                    set = function(info, value)
+                        UI:SetOption("cameraDefaultView", value)
+                    end
+                },
+                cameraCombatView = {
+                    name = "Combat Camera View",
+                    type = "select",
+                    width = "full",
+                    order = 2,
+                    values = {1,2,3,4,5},
+                    style = "dropdown",
+                    get = function()
+                        return UI:GetOption("cameraCombatView")
+                    end,
+                    set = function(info, value)
+                        UI:SetOption("cameraCombatView", value)
+                    end
+                },
+                cameraRestingView = {
+                    name = "Resting Camera View",
+                    type = "select",
+                    width = "full",
+                    order = 3,
+                    values = {1,2,3,4,5},
+                    style = "dropdown",
+                    get = function()
+                        return UI:GetOption("cameraRestingView")
+                    end,
+                    set = function(info, value)
+                        UI:SetOption("cameraRestingView", value)
+                    end
+                },
+                cameraMountedView = {
+                    name = "Mounted Camera View",
+                    type = "select",
+                    width = "full",
+                    order = 4,
+                    values = {1,2,3,4,5},
+                    style = "dropdown",
+                    get = function()
+                        return UI:GetOption("cameraMountedView")
+                    end,
+                    set = function(info, value)
+                        UI:SetOption("cameraMountedView", value)
+                    end
+                }
+            }
+        },
     }
 }
 
@@ -893,9 +971,9 @@ local defaults = {
         -- Action Bars Module
         actionBarsModule = true,
         actionBarsHideMacroNames = true,
-        actionBar1Condition = "",
-        actionBar2Condition = "[flying] hide; [mod:shift][harm,exists,nodead][help,exists,group][combat] show; hide",
-        actionBar3Condition = "[flying][nomod:alt,harm,exists,nodead][nomod:alt,help,exists,group] hide; [mod:alt,nomod:ctrl] show; hide",
+        actionBar1Condition = "[overridebar][possessbar][shapeshift][vehicleui] hide; [mod:ctrl][harm,exists,nodead][help,exists,group][combat] show; [resting] hide; show",
+        actionBar2Condition = "[overridebar][possessbar][shapeshift][vehicleui] hide; [flying] hide; [mod:shift][harm,exists,nodead][help,exists,group][combat] show; hide",
+        actionBar3Condition = "[overridebar][possessbar][shapeshift][vehicleui] hide; [flying][nomod:alt,harm,exists,nodead][nomod:alt,help,exists,group] hide; [mod:alt,nomod:ctrl] show; hide",
         actionBar4Condition = "",
         actionBar5Condition = "",
         actionBar6Condition = "",
@@ -904,8 +982,8 @@ local defaults = {
 
         -- Paging Module
         pagingModule = false,
-        pagingDefaultPage = 1,
-        pagingCombatPage = 2,
+        pagingDefaultPage = 2,
+        pagingCombatPage = 1,
 
         -- Pet Bar Module
         petActionBarModule = true,
@@ -921,7 +999,6 @@ local defaults = {
         -- Player Frame Module
         playerFrameModule = true,
         playerFrameCondition = "[@player,dead] hide; [mod:ctrl,mod:alt][harm,exists,nodead][help,exists,group][combat] show; hide",
-        -- playerFrameCondition = "[@player,dead] hide; [mod:ctrl,mod:alt] show; hide",
         playerFramePowerBarCondition = "[harm,exists,nodead,combat][help,exists,group,combat][combat] hide; show",
 
         -- Focus Frame Module
@@ -934,7 +1011,6 @@ local defaults = {
 
         -- Target Frame Module
         targetFrameModule = true,
-        -- targetFrameCondition = "[harm,exists,nodead][help,exists,combat][help,exists,group] show; hide",
         targetFrameCondition = "[mod:ctrl,mod:alt,exists] show; hide",
 
         -- Nameplate Module
@@ -971,6 +1047,12 @@ local defaults = {
         tooltipsUnitInCombat = true,
         tooltipsActionInCombat = true,
 
+        -- Camera Module
+        cameraModule = true,
+        cameraDefaultView = 2,
+        cameraCombatView = 5,
+        cameraRestingView = 2,
+        cameraMountedView = 5,
     }
 }
 
@@ -1066,6 +1148,10 @@ function UI:OnEnable()
 
     if self:GetOption("tooltipsModule") then
         Tooltips:Enable()
+    end
+
+    if self:GetOption("cameraModule") then
+        Camera:Enable()
     end
 
     for event in pairs(self.events) do
@@ -1714,9 +1800,9 @@ function Paging:Enable()
         Paging:Evaluate(event, ...)
     end)
 
-    UI:Event("UPDATE_STEALTH", function(event, ...)
-        Paging:Evaluate(event, ...)
-    end)
+    -- UI:Event("UPDATE_STEALTH", function(event, ...)
+    --     Paging:Evaluate(event, ...)
+    -- end)
 
     UI:Event("UPDATE_BONUS_ACTIONBAR", function(event, ...)
         Paging:Evaluate(event, ...)
@@ -1747,22 +1833,36 @@ function Paging:Evaluate(event, ...)
     Paging:Update()
 
     if event == "PLAYER_REGEN_DISABLED" or InCombatLockdown() or UnitAffectingCombat("player") then
-        return self:Page(self.combatPage)
-    end
 
-    if IsStealthed() then
-        return self:Page(1)
+        if GetBonusBarIndex() ~= 0 then
+            return self:Page(1)
+        else
+            return self:Page(self.combatPage)
+        end
+
     end
 
     if UnitCanAttack("player", "target") and not UnitIsDead("target") then
-        return self:Page(self.combatPage)
+
+        if GetBonusBarIndex() ~= 0 then
+            return self:Page(1)
+        else
+            return self:Page(self.combatPage)
+        end
+
     end
 
     if UnitCanAssist("player", "target") and UnitIsPlayer("target") then
-        return self:Page(self.combatPage)
+
+        if GetBonusBarIndex() ~= 0 then
+            return self:Page(1)
+        else
+            return self:Page(self.combatPage)
+        end
+
     end
 
-    if GetBonusBarIndex() == 11 then -- Dynamic Flying (Dragonriding)
+    if GetBonusBarIndex() == 11 then
         return self:Page(1)
     end
 
@@ -2432,11 +2532,48 @@ end
 function Nameplate:Enable()
 
     UI:Event("NAME_PLATE_UNIT_ADDED", function(event, unit)
-        self.Frame = nil
-        self.Frame = C_NamePlate.GetNamePlateForUnit("player")
+        local Frame = C_NamePlate.GetNamePlateForUnit(unit)
 
-        if self.Frame and UI:GetOption("nameplateHideBuffs") then
-            UI:HideFrame(self.Frame.UnitFrame.BuffFrame)
+        if UI:GetOption("nameplateHideBuffs") then
+
+            if UnitIsPlayer(unit) then
+
+                if Frame.UnitFrame then
+
+                    if not UI:IsHooked(Frame.UnitFrame.BuffFrame, "OnShow") then
+                        UI:SecureHookScript(Frame.UnitFrame.BuffFrame, "OnShow", function(self)
+                            self:Hide()
+                        end)
+                    end
+
+                    Frame.UnitFrame.BuffFrame:Hide()
+                end
+
+            else
+
+                if Frame.UnitFrame and UI:IsHooked(Frame.UnitFrame.BuffFrame, "OnShow") then
+                    UI:Unhook(Frame.UnitFrame.BuffFrame, "OnShow")
+                    Frame.UnitFrame.BuffFrame:Show()
+                end
+
+            end
+
+        end
+
+    end)
+    UI:Event("NAME_PLATE_UNIT_REMOVED", function(event, unit)
+
+        if UI:GetOption("nameplateHideBuffs") then
+
+            if UnitIsPlayer(unit) then
+                local Frame = C_NamePlate.GetNamePlateForUnit(unit)
+
+                if Frame.UnitFrame and UI:IsHooked(Frame.UnitFrame.BuffFrame, "OnShow") then
+                    UI:Unhook(Frame.UnitFrame.BuffFrame, "OnShow")
+                end
+
+            end
+
         end
 
     end)
@@ -2964,4 +3101,79 @@ end
 
 function Tooltips:Hide()
     self.Frame:Hide()
+end
+
+--------------------------------------------------------------------------------
+-- Camera
+--------------------------------------------------------------------------------
+
+function Camera:Enable()
+    self.view = nil
+
+    UI:Event("PLAYER_ENTERING_WORLD", function()
+        Camera:Update(UI:GetOption("cameraDefaultView"))
+    end)
+
+    UI:Event("PLAYER_REGEN_DISABLED", function()
+        Camera:Update(UI:GetOption("cameraCombatView"))
+    end)
+    UI:Event("PLAYER_REGEN_ENABLED", function()
+        Camera:Update(UI:GetOption("cameraDefaultView"))
+    end)
+
+    UI:Event("PLAYER_MOUNT_DISPLAY_CHANGED", function()
+
+        if IsMounted() then
+            Camera:Update(UI:GetOption("cameraMountedView"))
+        else
+            Camera:Update(UI:GetOption("cameraDefaultView"))
+        end
+
+    end)
+
+    UI:Event("UNIT_ENTERING_VEHICLE", function(event, unit)
+
+        if unit == "player" then
+            Camera:Update(UI:GetOption("cameraMountedView"))
+        end
+
+    end)
+    UI:Event("UNIT_EXITING_VEHICLE", function(event, unit)
+
+        if unit == "player" then
+            Camera:Update(UI:GetOption("cameraDefaultView"))
+        end
+
+    end)
+
+    UI:Event("PLAYER_TARGET_CHANGED", function()
+
+        if UnitCanAttack("player", "target") and not UnitIsDead("target") and not InCombatLockdown() then
+            Camera:Update(UI:GetOption("cameraCombatView"))
+        elseif UnitCanAssist("player", "target") and UnitIsPlayer("target") and not InCombatLockdown() then
+            Camera:Update(UI:GetOption("cameraCombatView"))
+        elseif not InCombatLockdown() then
+            Camera:Update(UI:GetOption("cameraDefaultView"))
+        end
+
+    end)
+
+    UI:Event("PLAYER_UPDATE_RESTING", function()
+
+        if IsResting() then
+            Camera:Update(UI:GetOption("cameraRestingView"))
+        else
+            Camera:Update(UI:GetOption("cameraDefaultView"))
+        end
+
+    end)
+end
+
+function Camera:Update(view)
+
+    if view ~= self.view then
+        SetView(view)
+        self.view = view
+    end
+
 end
