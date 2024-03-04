@@ -1049,7 +1049,7 @@ local defaults = {
 
         -- Camera Module
         cameraModule = true,
-        cameraDefaultView = 2,
+        cameraDefaultView = 5,
         cameraCombatView = 5,
         cameraRestingView = 2,
         cameraMountedView = 5,
