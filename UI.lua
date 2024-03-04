@@ -951,9 +951,23 @@ local options = {
                     set = function(info, value)
                         UI:SetOption("cameraMountedView", value)
                     end
+                },
+                cameraIndoorsView = {
+                    name = "Indoors Camera View",
+                    type = "select",
+                    width = "full",
+                    order = 5,
+                    values = {1,2,3,4,5},
+                    style = "dropdown",
+                    get = function()
+                        return UI:GetOption("cameraIndoorsView")
+                    end,
+                    set = function(info, value)
+                        UI:SetOption("cameraMountedView", value)
+                    end
                 }
             }
-        },
+        }
     }
 }
 
@@ -1053,6 +1067,7 @@ local defaults = {
         cameraCombatView = 5,
         cameraRestingView = 2,
         cameraMountedView = 5,
+        cameraIndoorsView = 2,
     }
 }
 
@@ -3111,84 +3126,49 @@ function Camera:Enable()
     self.view = nil
 
     UI:Event("PLAYER_ENTERING_WORLD", function()
-
-        if not IsMounted() and not IsResting() then
-            Camera:Update(UI:GetOption("cameraDefaultView"))
-        elseif not IsMounted() and IsResting() then
-            Camera:Update(UI:GetOption("cameraRestingView"))
-        elseif IsMounted() then
-            Camera:Update(UI:GetOption("cameraMountedView"))
-        end
-
+        Camera:Evaluate()
     end)
 
     UI:Event("PLAYER_REGEN_DISABLED", function()
-        Camera:Update(UI:GetOption("cameraCombatView"))
+        Camera:Evaluate()
     end)
     UI:Event("PLAYER_REGEN_ENABLED", function()
-
-        if not IsMounted() and not InCombatLockdown() then
-            Camera:Update(UI:GetOption("cameraDefaultView"))
-        end
-
+        Camera:Evaluate()
     end)
 
     UI:Event("PLAYER_MOUNT_DISPLAY_CHANGED", function()
-
-        if IsMounted() then
-            Camera:Update(UI:GetOption("cameraMountedView"))
-        elseif not InCombatLockdown() then
-            Camera:Update(UI:GetOption("cameraDefaultView"))
-        end
-
+        Camera:Evaluate()
     end)
 
     UI:Event("UNIT_ENTERED_VEHICLE", function(event, unit)
 
         if unit == "player" then
-            Camera:Update(UI:GetOption("cameraMountedView"))
+            Camera:Evaluate()
         end
 
     end)
     UI:Event("UNIT_EXITED_VEHICLE", function(event, unit)
 
-        if unit == "player" and not IsMounted() and not InCombatLockdown() then
-            Camera:Update(UI:GetOption("cameraDefaultView"))
+        if unit == "player" then
+            Camera:Evaluate()
         end
 
     end)
 
     UI:Event("PLAYER_TARGET_CHANGED", function()
-
-        if UnitCanAttack("player", "target") and not UnitIsDead("target") and not InCombatLockdown() then
-            Camera:Update(UI:GetOption("cameraCombatView"))
-        elseif UnitCanAssist("player", "target") and UnitIsPlayer("target") and not InCombatLockdown() then
-            Camera:Update(UI:GetOption("cameraCombatView"))
-        elseif not IsMounted() and not InCombatLockdown() then
-            Camera:Update(UI:GetOption("cameraDefaultView"))
-        end
-
+        Camera:Evaluate()
     end)
 
     UI:Event("PLAYER_UPDATE_RESTING", function()
-
-        if IsResting() and not IsMounted() then
-            Camera:Update(UI:GetOption("cameraRestingView"))
-        elseif not IsMounted() then
-            Camera:Update(UI:GetOption("cameraDefaultView"))
-        end
-
+        Camera:Evaluate()
     end)
 
     UI:Event("UPDATE_SHAPESHIFT_FORM", function()
-        local _, class = UnitClass("player")
+        Camera:Evaluate()
+    end)
 
-        if class == "DRUID" and GetShapeshiftForm() == 3 then
-            Camera:Update(UI:GetOption("cameraMountedView"))
-        elseif class == "DRUID" then
-            Camera:Update(UI:GetOption("cameraDefaultView"))
-        end
-
+    UI:Event("FOG_OF_WAR_UPDATED", function()
+        Camera:Evaluate()
     end)
 end
 
@@ -3199,4 +3179,44 @@ function Camera:Update(view)
         self.view = view
     end
 
+end
+
+function Camera:Evaluate()
+    local view = UI:GetOption("cameraDefaultView")
+
+    if IsResting() then
+        view = UI:GetOption("cameraRestingView")
+    end
+
+    if self:IsMounted() then
+        view = UI:GetOption("cameraMountedView")
+    end
+
+    if IsIndoors() then
+        view = UI:GetOption("cameraIndoorsView")
+    end
+
+    if InCombatLockdown() then
+        view = UI:GetOption("cameraCombatView")
+    end
+
+    if UnitCanAttack("player", "target") and not UnitIsDead("target") then
+        view = UI:GetOption("cameraCombatView")
+    end
+
+    if UnitCanAssist("player", "target") and UnitIsPlayer("target") then
+        view = UI:GetOption("cameraCombatView")
+    end
+
+    self:Update(view)
+end
+
+function Camera:IsMounted()
+    local _, class = UnitClass("player")
+
+    if class == "DRUID" and GetShapeshiftForm() == 3 then
+        return true
+    end
+
+    return IsMounted()
 end
