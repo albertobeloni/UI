@@ -971,9 +971,9 @@ local defaults = {
         -- Action Bars Module
         actionBarsModule = true,
         actionBarsHideMacroNames = true,
-        actionBar1Condition = "[overridebar][possessbar][shapeshift][vehicleui] hide; [mod:ctrl][harm,exists,nodead][help,exists,group][combat] show; [resting] hide; show",
+        actionBar1Condition = "[overridebar][possessbar][shapeshift][vehicleui] hide; [flying] show; [mod:ctrl,nomod:alt][harm,exists,nodead][help,exists,group][combat] show; hide",
         actionBar2Condition = "[overridebar][possessbar][shapeshift][vehicleui] hide; [flying] hide; [mod:shift][harm,exists,nodead][help,exists,group][combat] show; hide",
-        actionBar3Condition = "[overridebar][possessbar][shapeshift][vehicleui] hide; [flying][nomod:alt,harm,exists,nodead][nomod:alt,help,exists,group] hide; [mod:alt,nomod:ctrl] show; hide",
+        actionBar3Condition = "[overridebar][possessbar][shapeshift][vehicleui] hide; [flying] hide; [mod:alt,nomod:ctrl] show; hide",
         actionBar4Condition = "",
         actionBar5Condition = "",
         actionBar6Condition = "",
@@ -987,11 +987,11 @@ local defaults = {
 
         -- Pet Bar Module
         petActionBarModule = true,
-        petActionBarCondition = "[nomod:alt,mod:ctrl,@pet,exists] show; hide",
+        petActionBarCondition = "[mod:ctrl,nomod:alt,@pet,exists] show; hide",
 
         -- Stance Bar Module
         stanceBarModule = true,
-        stanceBarCondition = "[nomod:alt,mod:ctrl] show; hide",
+        stanceBarCondition = "[mod:ctrl,nomod:alt] show; hide",
 
         -- Status Tracking Bar Module
         statusTrackingBarModule = true,
