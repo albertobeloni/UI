@@ -985,7 +985,7 @@ local defaults = {
         -- Action Bars Module
         actionBarsModule = true,
         actionBarsHideMacroNames = true,
-        actionBar1Condition = "[overridebar][possessbar][shapeshift][vehicleui] hide; [flying] show; [mod:ctrl,nomod:alt][harm,exists,nodead][help,exists,group][combat] show; hide",
+        actionBar1Condition = "[overridebar][possessbar][shapeshift][vehicleui] hide; [mod:ctrl,nomod:alt][harm,exists,nodead][help,exists,group][combat] show; hide",
         actionBar2Condition = "[overridebar][possessbar][shapeshift][vehicleui] hide; [flying] hide; [mod:shift][harm,exists,nodead][help,exists,group][combat] show; hide",
         actionBar3Condition = "[overridebar][possessbar][shapeshift][vehicleui] hide; [flying] hide; [mod:alt,nomod:ctrl] show; hide",
         actionBar4Condition = "",
