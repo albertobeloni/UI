@@ -3208,6 +3208,10 @@ function Camera:Evaluate()
         view = UI:GetOption("cameraCombatView")
     end
 
+    if IsInInstance() then
+        view = UI:GetOption("cameraCombatView")
+    end
+
     self:Update(view)
 end
 
